@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Taller">
+
+<title>Carga de datos</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="ABB_modelo_de_datos_files/libs/clipboard/clipboard.min.js"></script>
+<script src="ABB_modelo_de_datos_files/libs/quarto-html/quarto.js"></script>
+<script src="ABB_modelo_de_datos_files/libs/quarto-html/popper.min.js"></script>
+<script src="ABB_modelo_de_datos_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="ABB_modelo_de_datos_files/libs/quarto-html/anchor.min.js"></script>
+<link href="ABB_modelo_de_datos_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="ABB_modelo_de_datos_files/libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="ABB_modelo_de_datos_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="ABB_modelo_de_datos_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="ABB_modelo_de_datos_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Tabla de contenidos</h2>
+   
+  <ul>
+  <li><a href="#carga-de-datos" id="toc-carga-de-datos" class="nav-link active" data-scroll-target="#carga-de-datos">Carga de datos</a>
+  <ul class="collapse">
+  <li><a href="#carga-de-datos-del-fichero-listings.csv.gz" id="toc-carga-de-datos-del-fichero-listings.csv.gz" class="nav-link" data-scroll-target="#carga-de-datos-del-fichero-listings.csv.gz">Carga de datos del fichero listings.csv.gz</a></li>
+  </ul></li>
+  <li><a href="#lectura-de-todas-las-observaciones-de-listings-de-una-zona-mallorca" id="toc-lectura-de-todas-las-observaciones-de-listings-de-una-zona-mallorca" class="nav-link" data-scroll-target="#lectura-de-todas-las-observaciones-de-listings-de-una-zona-mallorca">Lectura de todas las observaciones de listings de una zona: Mallorca</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Carga de datos</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>Taller </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="carga-de-datos" class="level1">
+<h1>Carga de datos</h1>
+<p>Leeremos los datos que ya hemos guardado en la carpeta data para las zonas: Albany, Mallorca, Menorca y Valencia. Para los scrappings disponibles en<br>
+<a href="https://insideairbnb.com/">Inside Airbnb</a> el 14-11-2024; en este enlace<br>
+se dispones de más información sobre los variables en <a href="https://insideairbnb.com/get-the-data/">get-the-data</a>. Cada Carpeta de la zona contiene para cada fecha en las que se recogieron los datos una carpeta con<br>
+varios ficheros. Por ejemplo para Menorca tenemos las muestras en 4 periodos de tiempo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dir</span>(<span class="st">"data/menorca"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "2023-09-25" "2023-12-30" "2024-03-31" "2024-06-30"</code></pre>
+</div>
+</div>
+<p>En cada carpeta, por ejemplo la primera, tenemos los mismos ficheros.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dir</span>(<span class="st">"data/menorca/2023-09-25/"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "calendar.csv.gz"        "listings.csv.gz"        "neighbourhoods.csv"    
+[4] "neighbourhoods.geojson" "reviews.csv.gz"        </code></pre>
+</div>
+</div>
+<section id="carga-de-datos-del-fichero-listings.csv.gz" class="level2">
+<h2 class="anchored" data-anchor-id="carga-de-datos-del-fichero-listings.csv.gz">Carga de datos del fichero listings.csv.gz</h2>
+<p>El archivo <code>listings.csv.gz</code> es un fichero csv comprimido. Descomprimido ocupa bastante espacio sí que lo leeremos con la función <code>read_csv</code> que ya descomprime los archivos <code>gz</code>.</p>
+<p>Cargado o leyendo el archivo varias veces los tipos de datos adecuados<br>
+con los que leeremos con el siguiente código:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>listings <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/menorca/2023-09-25/listings.csv.gz"</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(listings)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 3,986
+Columns: 75
+$ id                                           &lt;dbl&gt; 44085, 102558, 285865, 29…
+$ listing_url                                  &lt;chr&gt; "https://www.airbnb.com/r…
+$ scrape_id                                    &lt;dbl&gt; 2.023093e+13, 2.023093e+1…
+$ last_scraped                                 &lt;date&gt; 2023-09-25, 2023-09-25, …
+$ source                                       &lt;chr&gt; "city scrape", "city scra…
+$ name                                         &lt;chr&gt; "Home in Puerto Luz · ★4.…
+$ description                                  &lt;chr&gt; "Best view ever on the ba…
+$ neighborhood_overview                        &lt;chr&gt; NA, NA, "The best near ar…
+$ picture_url                                  &lt;chr&gt; "https://a0.muscache.com/…
+$ host_id                                      &lt;dbl&gt; 193043, 536023, 1487752, …
+$ host_url                                     &lt;chr&gt; "https://www.airbnb.com/u…
+$ host_name                                    &lt;chr&gt; "Manuela", "Yolanda", "Ro…
+$ host_since                                   &lt;date&gt; 2010-08-06, 2011-04-26, …
+$ host_location                                &lt;chr&gt; "Sant Lluís, Spain", "Bar…
+$ host_about                                   &lt;chr&gt; "Vivo entre Menorca y Mil…
+$ host_response_time                           &lt;chr&gt; "within an hour", "within…
+$ host_response_rate                           &lt;chr&gt; "100%", "100%", "90%", "3…
+$ host_acceptance_rate                         &lt;chr&gt; "95%", "85%", "91%", "20%…
+$ host_is_superhost                            &lt;lgl&gt; TRUE, TRUE, FALSE, FALSE,…
+$ host_thumbnail_url                           &lt;chr&gt; "https://a0.muscache.com/…
+$ host_picture_url                             &lt;chr&gt; "https://a0.muscache.com/…
+$ host_neighbourhood                           &lt;chr&gt; NA, NA, NA, NA, NA, NA, N…
+$ host_listings_count                          &lt;dbl&gt; 4, 1, 2, 5, 5, 1, 5, 1, 2…
+$ host_total_listings_count                    &lt;dbl&gt; 5, 1, 4, 8, 8, 1, 10, 1, …
+$ host_verifications                           &lt;chr&gt; "['email', 'phone', 'work…
+$ host_has_profile_pic                         &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, T…
+$ host_identity_verified                       &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, T…
+$ neighbourhood                                &lt;chr&gt; NA, NA, "Menorca, Baleari…
+$ neighbourhood_cleansed                       &lt;chr&gt; "Es Mercadal", "Ciutadell…
+$ neighbourhood_group_cleansed                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, N…
+$ latitude                                     &lt;dbl&gt; 40.00974, 39.94340, 40.00…
+$ longitude                                    &lt;dbl&gt; 4.199580, 3.961300, 3.799…
+$ property_type                                &lt;chr&gt; "Entire home", "Entire re…
+$ room_type                                    &lt;chr&gt; "Entire home/apt", "Entir…
+$ accommodates                                 &lt;dbl&gt; 6, 4, 4, 16, 16, 6, 4, 4,…
+$ bathrooms                                    &lt;lgl&gt; NA, NA, NA, NA, NA, NA, N…
+$ bathrooms_text                               &lt;chr&gt; "2 baths", "1 bath", "1 b…
+$ bedrooms                                     &lt;dbl&gt; 3, 2, 1, 9, 11, 3, 3, 2, …
+$ beds                                         &lt;dbl&gt; 5, 4, 1, 13, 15, 5, 3, 3,…
+$ amenities                                    &lt;chr&gt; "[\"Private patio or balc…
+$ price                                        &lt;chr&gt; "$463.00", "$73.00", "$61…
+$ minimum_nights                               &lt;dbl&gt; 5, 4, 2, 32, 32, 5, 3, 3,…
+$ maximum_nights                               &lt;dbl&gt; 90, 30, 1125, 45, 45, 30,…
+$ minimum_minimum_nights                       &lt;dbl&gt; 5, 4, 2, 32, 32, 5, 3, 3,…
+$ maximum_minimum_nights                       &lt;dbl&gt; 5, 7, 2, 32, 32, 6, 3, 3,…
+$ minimum_maximum_nights                       &lt;dbl&gt; 1125, 30, 1125, 45, 45, 3…
+$ maximum_maximum_nights                       &lt;dbl&gt; 1125, 30, 1125, 45, 45, 3…
+$ minimum_nights_avg_ntm                       &lt;dbl&gt; 5.0, 4.5, 2.0, 32.0, 32.0…
+$ maximum_nights_avg_ntm                       &lt;dbl&gt; 1125.0, 30.0, 1125.0, 45.…
+$ calendar_updated                             &lt;lgl&gt; NA, NA, NA, NA, NA, NA, N…
+$ has_availability                             &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, T…
+$ availability_30                              &lt;dbl&gt; 0, 24, 4, 27, 27, 29, 6, …
+$ availability_60                              &lt;dbl&gt; 2, 54, 24, 57, 57, 33, 6,…
+$ availability_90                              &lt;dbl&gt; 2, 84, 46, 87, 87, 33, 6,…
+$ availability_365                             &lt;dbl&gt; 65, 359, 245, 362, 317, 3…
+$ calendar_last_scraped                        &lt;date&gt; 2023-09-25, 2023-09-25, …
+$ number_of_reviews                            &lt;dbl&gt; 20, 58, 128, 12, 24, 42, …
+$ number_of_reviews_ltm                        &lt;dbl&gt; 1, 8, 30, 0, 0, 2, 1, 16,…
+$ number_of_reviews_l30d                       &lt;dbl&gt; 0, 3, 2, 0, 0, 0, 0, 1, 3…
+$ first_review                                 &lt;date&gt; 2012-07-06, 2011-06-26, …
+$ last_review                                  &lt;date&gt; 2023-08-23, 2023-09-17, …
+$ review_scores_rating                         &lt;dbl&gt; 4.63, 4.66, 4.29, 4.55, 4…
+$ review_scores_accuracy                       &lt;dbl&gt; 4.75, 4.74, 4.50, 4.45, 4…
+$ review_scores_cleanliness                    &lt;dbl&gt; 4.60, 4.64, 4.09, 4.27, 4…
+$ review_scores_checkin                        &lt;dbl&gt; 4.74, 4.72, 4.48, 4.50, 4…
+$ review_scores_communication                  &lt;dbl&gt; 4.85, 4.88, 4.64, 4.91, 4…
+$ review_scores_location                       &lt;dbl&gt; 4.74, 4.74, 4.61, 4.50, 4…
+$ review_scores_value                          &lt;dbl&gt; 4.32, 4.50, 4.10, 4.40, 4…
+$ license                                      &lt;chr&gt; "ET3036ME", "ET2253ME", N…
+$ instant_bookable                             &lt;lgl&gt; FALSE, FALSE, FALSE, FALS…
+$ calculated_host_listings_count               &lt;dbl&gt; 3, 1, 1, 3, 3, 1, 5, 1, 1…
+$ calculated_host_listings_count_entire_homes  &lt;dbl&gt; 3, 1, 1, 3, 3, 1, 5, 1, 1…
+$ calculated_host_listings_count_private_rooms &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0…
+$ calculated_host_listings_count_shared_rooms  &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0…
+$ reviews_per_month                            &lt;dbl&gt; 0.15, 0.39, 0.94, 0.12, 0…</code></pre>
+</div>
+</div>
+<p>Releemos dando formato adecuado, por ejemplo las fechas las leemos como <code>Date</code> y no como <code>character</code>, los id como <code>character</code> y no cómo <code>numeric</code>. Algunas variables llevan símbolos <code>$</code> o <code>%</code> que los leemos como <code>character</code> y<br>
+hay que convertirlos a <code>numeric</code> como sucede con <code>price</code>, <code>host_response_rate</code> o <code>host_acceptance_rate</code>. También hay otras variables lógicas. El lector verá en el código cómo hemos parseado las variables. Volvemos a leer el archivo de forma más adecuada (aunque no perfecta):</p>
+<p>listings&lt;- read_csv(“data/menorca/2023-09-25/listings.csv.gz”, col_types = cols(<br>
+id =col_character(), listing_url =col_character(), scrape_id =col_character(), last_scraped =col_date(format = “%Y%m%d”), source =col_character(), name =col_character(), description =col_character(), neighborhood_overview =col_character(), picture_url =col_character(), host_id =col_character(), host_url =col_character(), host_name =col_character(), host_since =col_date(format = “%Y%m%d”), host_location =col_character(), host_about =col_character(), host_response_time =col_number(), host_response_rate =col_number(), host_acceptance_rate =col_number(), host_is_superhost =col_logical(), host_thumbnail_url =col_character(), host_picture_url =col_character(), host_neighbourhood =col_character(), host_listings_count =col_number(), host_total_listings_count =col_number(), host_verifications =col_character(), host_has_profile_pic =col_logical(), host_identity_verified =col_logical(), neighbourhood =col_character(), neighbourhood_cleansed =col_character(), neighbourhood_group_cleansed =col_character(), latitude =col_number(), longitude =col_number(), property_type =col_character(), room_type =col_character(), accommodates =col_number(), bathrooms =col_logical(), bathrooms_text =col_character(), bedrooms =col_number(), beds =col_number(), amenities =col_character(), price =col_number(), minimum_nights =col_number(), maximum_nights =col_number(), minimum_minimum_nights =col_number(), maximum_minimum_nights =col_number(), minimum_maximum_nights =col_number(), maximum_maximum_nights =col_number(), minimum_nights_avg_ntm =col_number(), maximum_nights_avg_ntm =col_number(), calendar_updated =col_logical(), has_availability =col_logical(), availability_30 =col_number(), availability_60 =col_number(), availability_90 =col_number(), availability_365 =col_number(), calendar_last_scraped =col_date(format = “%Y%m%d”), number_of_reviews =col_number(), number_of_reviews_ltm =col_number(), number_of_reviews_l30d =col_number(), first_review =col_date(format = “%Y%m%d”), last_review =col_date(format = “%Y%m%d”), review_scores_rating =col_number(), review_scores_accuracy =col_number(), review_scores_cleanliness =col_number(), review_scores_checkin =col_number(), review_scores_communication =col_number(), review_scores_location =col_number(), review_scores_value =col_number(), license =col_character(), instant_bookable =col_logical(), calculated_host_listings_count =col_number(), calculated_host_listings_count_entire_homes =col_number(), calculated_host_listings_count_private_rooms =col_number(), calculated_host_listings_count_shared_rooms =col_number(), reviews_per_month =col_number()))</p>
+<pre><code>
+Como vemos  hay  incidencias en observaciones que afectan a las columnas 
+algunas conlumnas que podemos ver con la función `problems(listings1)`
+
+Omitiremos las columnas con problemas para esta práctica.  De hecho vamos a reducir las columnas con las que trabajamos, por ejemplo seleccionamos las columnas:
+
+
+
+::: {.cell}
+
+```{.r .cell-code}
+listings &lt;- listings %&gt;% select(
+  id,
+  price,
+  longitude,
+  latitude,
+  property_type,
+  room_type,
+  accommodates,
+  bedrooms,
+  beds,
+  amenities,
+  number_of_reviews,
+  review_scores_rating,
+  review_scores_value,
+  latitude,
+  longitude,
+  host_is_superhost,
+  host_name
+)</code></pre>
+<p>:::</p>
+<p>Ahora tenemos</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(listings)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 3,986
+Columns: 15
+$ id                   &lt;dbl&gt; 44085, 102558, 285865, 294398, 295705, 325641, 33…
+$ price                &lt;chr&gt; "$463.00", "$73.00", "$61.00", "$567.00", "$1,125…
+$ longitude            &lt;dbl&gt; 4.199580, 3.961300, 3.799670, 4.115950, 4.114760,…
+$ latitude             &lt;dbl&gt; 40.00974, 39.94340, 40.00245, 39.89082, 39.89028,…
+$ property_type        &lt;chr&gt; "Entire home", "Entire rental unit", "Entire rent…
+$ room_type            &lt;chr&gt; "Entire home/apt", "Entire home/apt", "Entire hom…
+$ accommodates         &lt;dbl&gt; 6, 4, 4, 16, 16, 6, 4, 4, 5, 12, 4, 10, 6, 2, 4, …
+$ bedrooms             &lt;dbl&gt; 3, 2, 1, 9, 11, 3, 3, 2, 2, 7, 2, 5, 3, 1, 2, 2, …
+$ beds                 &lt;dbl&gt; 5, 4, 1, 13, 15, 5, 3, 3, 3, 7, 3, 6, 4, 1, 3, 2,…
+$ amenities            &lt;chr&gt; "[\"Private patio or balcony\", \"Cooking basics\…
+$ number_of_reviews    &lt;dbl&gt; 20, 58, 128, 12, 24, 42, 44, 63, 77, 39, 28, 9, 1…
+$ review_scores_rating &lt;dbl&gt; 4.63, 4.66, 4.29, 4.55, 4.83, 4.48, 4.71, 4.98, 4…
+$ review_scores_value  &lt;dbl&gt; 4.32, 4.50, 4.10, 4.40, 4.57, 4.38, 4.48, 4.94, 4…
+$ host_is_superhost    &lt;lgl&gt; TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TR…
+$ host_name            &lt;chr&gt; "Manuela", "Yolanda", "Roberto", "Natalia", "Nata…</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="lectura-de-todas-las-observaciones-de-listings-de-una-zona-mallorca" class="level1">
+<h1>Lectura de todas las observaciones de listings de una zona: Mallorca</h1>
+<p>El siguiente código lee todas las carpetas de la zona de Mallorca y lee los archivos <code>listings.csv</code> de cada una de ellas. y genera un listing que contenga todos los apartamentos (los <code>id</code>) que aparecen en los 4 scrappings que disponemos de Mallorca. Hemos parametrizado el código para que se pueda cambiar a otra zona se quiera analizar.</p>
+<p>Se comenta el código para facilitar su lectura (generado…).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar biblioteca necesaria</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir directorios y seleccionar uno para procesar</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>dir_mallorca <span class="ot">&lt;-</span> <span class="fu">dir</span>(<span class="st">"data/mallorca"</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>dir_zone <span class="ot">&lt;-</span> dir_mallorca  <span class="co"># Aquí se puede cambiar la zona según sea necesario</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Función para leer archivos de listado</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>read_data_listing <span class="ot">&lt;-</span> <span class="cf">function</span>(dir) {</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  readr<span class="sc">::</span><span class="fu">read_csv</span>(</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">"data/mallorca/"</span>, dir, <span class="st">"/listings.csv.gz"</span>),</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">col_types =</span> <span class="fu">cols</span>(                         </span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="at">id =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="at">listing_url =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="at">scrape_id =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="at">last_scraped =</span><span class="fu">col_date</span>(<span class="at">format =</span> <span class="st">"%Y%m%d"</span>),</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="at">source =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="at">name =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="at">description =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="at">neighborhood_overview =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="at">picture_url =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="at">host_id =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="at">host_url =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="at">host_name =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="at">host_since =</span><span class="fu">col_date</span>(<span class="at">format =</span> <span class="st">"%Y%m%d"</span>),</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="at">host_location =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="at">host_about =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="at">host_response_time =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="at">host_response_rate =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="at">host_acceptance_rate =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="at">host_is_superhost =</span><span class="fu">col_logical</span>(),</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="at">host_thumbnail_url =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="at">host_picture_url =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="at">host_neighbourhood =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="at">host_listings_count =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="at">host_total_listings_count =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="at">host_verifications =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="at">host_has_profile_pic =</span><span class="fu">col_logical</span>(),</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="at">host_identity_verified =</span><span class="fu">col_logical</span>(),</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="at">neighbourhood =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="at">neighbourhood_cleansed =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a><span class="at">neighbourhood_group_cleansed =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a><span class="at">latitude =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a><span class="at">longitude =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a><span class="at">property_type =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="at">room_type =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a><span class="at">accommodates =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a><span class="at">bathrooms =</span><span class="fu">col_logical</span>(),</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a><span class="at">bathrooms_text =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a><span class="at">bedrooms =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a><span class="at">beds =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a><span class="at">amenities =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a><span class="at">price =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a><span class="at">minimum_nights =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a><span class="at">maximum_nights =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a><span class="at">minimum_minimum_nights =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a><span class="at">maximum_minimum_nights =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a><span class="at">minimum_maximum_nights =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a><span class="at">maximum_maximum_nights =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a><span class="at">minimum_nights_avg_ntm =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a><span class="at">maximum_nights_avg_ntm =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a><span class="at">calendar_updated =</span><span class="fu">col_logical</span>(),</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a><span class="at">has_availability =</span><span class="fu">col_logical</span>(),</span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a><span class="at">availability_30 =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a><span class="at">availability_60 =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a><span class="at">availability_90 =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a><span class="at">availability_365 =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a><span class="at">calendar_last_scraped =</span><span class="fu">col_date</span>(<span class="at">format =</span> <span class="st">"%Y%m%d"</span>),</span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a><span class="at">number_of_reviews =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a><span class="at">number_of_reviews_ltm =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a><span class="at">number_of_reviews_l30d =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a><span class="at">first_review =</span><span class="fu">col_date</span>(<span class="at">format =</span> <span class="st">"%Y%m%d"</span>),</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a><span class="at">last_review =</span><span class="fu">col_date</span>(<span class="at">format =</span> <span class="st">"%Y%m%d"</span>),</span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a><span class="at">review_scores_rating =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a><span class="at">review_scores_accuracy =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a><span class="at">review_scores_cleanliness =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a><span class="at">review_scores_checkin =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a><span class="at">review_scores_communication =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a><span class="at">review_scores_location =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a><span class="at">review_scores_value =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a><span class="at">license =</span><span class="fu">col_character</span>(),</span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a><span class="at">instant_bookable =</span><span class="fu">col_logical</span>(),</span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a><span class="at">calculated_host_listings_count =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a><span class="at">calculated_host_listings_count_entire_homes =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a><span class="at">calculated_host_listings_count_private_rooms =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a><span class="at">calculated_host_listings_count_shared_rooms =</span><span class="fu">col_number</span>(),</span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a><span class="at">reviews_per_month =</span><span class="fu">col_number</span>()))</span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Ahora unimos las cuatro muestras temporales</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Leer y almacenar los datos de cada archivo en una lista</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>listing_list <span class="ot">&lt;-</span> <span class="fu">lapply</span>(dir_zone, read_data_listing)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar estructura y consistencia de datos</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(listing_list, dim)          <span class="co"># Verificar que todos tengan 75 columnas</span></span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      [,1]  [,2]  [,3]  [,4]
+[1,] 18117 16698 17215 17278
+[2,]    75    75    75    75</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>names_list <span class="ot">&lt;-</span> <span class="fu">lapply</span>(listing_list, names)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>all_same_names <span class="ot">&lt;-</span> <span class="fu">length</span>(<span class="fu">unique</span>(names_list)) <span class="sc">==</span> <span class="dv">1</span>  <span class="co"># Chequear nombres de columnas</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Analizar IDs de listados para observar consistencia entre periodos</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>id_list <span class="ot">&lt;-</span> <span class="fu">lapply</span>(listing_list, <span class="cf">function</span>(x) x<span class="sc">$</span>id)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>id_global <span class="ot">&lt;-</span> <span class="fu">unlist</span>(id_list)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>unique_id_count <span class="ot">&lt;-</span> <span class="fu">length</span>(<span class="fu">unique</span>(id_global))       <span class="co"># Conteo de IDs únicos</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Encontrar IDs comunes en todos los periodos</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>id_common <span class="ot">&lt;-</span> <span class="fu">Reduce</span>(intersect, id_list)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Consolidar todos los listados en un solo data frame</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>listings_mallorca <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, listing_list)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear un data frame con los listados comunes en todos los periodos</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>listings_common0 <span class="ot">&lt;-</span> listings_mallorca <span class="sc">%&gt;%</span> <span class="fu">filter</span>(id <span class="sc">%in%</span> id_common)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Por último de los comunes seleccionamos unas cuantas variables para hacer un análisis exploratorio, PERO CUIDADO, notemos que hemos perdido información de las fechas de los reviews, por lo que deberíamos de tener cuidado con el análisis que hagamos con estas variables y de algunas variables como <code>price</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>listings_common1 <span class="ot">&lt;-</span> listings_common0 <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    id,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    price,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    longitude,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    latitude,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    property_type,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    room_type,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    accommodates,</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    bedrooms,</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    beds,</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    number_of_reviews,</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    review_scores_rating,</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    review_scores_value,</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    latitude,</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    longitude,</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    host_is_superhost,</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    host_name,</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    neighbourhood_cleansed)</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(listings_common1)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 52,088
+Columns: 15
+$ id                     &lt;chr&gt; "49752748", "935239498971961146", "24932587", "…
+$ price                  &lt;dbl&gt; 2636, 107, 50, 683, 62, 1500, 655, 110, 162, 23…
+$ longitude              &lt;dbl&gt; 2.713081, 3.117657, 2.624710, 3.212510, 3.23978…
+$ latitude               &lt;dbl&gt; 39.76360, 39.31451, 39.56223, 39.45897, 39.3819…
+$ property_type          &lt;chr&gt; "Entire home", "Entire home", "Entire rental un…
+$ room_type              &lt;chr&gt; "Entire home/apt", "Entire home/apt", "Entire h…
+$ accommodates           &lt;dbl&gt; 14, 5, 2, 10, 4, 8, 5, 2, 6, 10, 6, 2, 8, 6, 6,…
+$ bedrooms               &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
+$ beds                   &lt;dbl&gt; 9, 4, 1, 7, 3, 5, 3, 3, 5, 5, 6, 2, 6, 5, 5, 5,…
+$ number_of_reviews      &lt;dbl&gt; 0, 0, 124, 0, 18, 0, 0, 73, 0, 0, 23, 52, 0, 1,…
+$ review_scores_rating   &lt;dbl&gt; NA, NA, 4.88, NA, 4.89, NA, NA, 4.73, NA, NA, 4…
+$ review_scores_value    &lt;dbl&gt; NA, NA, 4.64, NA, 4.83, NA, NA, 4.64, NA, NA, 4…
+$ host_is_superhost      &lt;lgl&gt; FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, …
+$ host_name              &lt;chr&gt; "Novasol", "Mallorca Villa Selection", "Juana",…
+$ neighbourhood_cleansed &lt;chr&gt; "Sóller", "Santanyí", "Palma de Mallorca", "Fel…</code></pre>
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copiado");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copiado");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,348 @@
+---
+title: "Carga de datos"
+author: "Taller"
+lang: es
+format:
+  html:
+    theme: Superhero
+    toc: true
+    html-math-method: katex
+    css: styles.css
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE,cache=TRUE)
+# packages
+library(tidyverse)
+```
+
+
+# Carga de datos
+
+
+Leeremos los datos que  ya hemos guardado en la carpeta data para las zonas: 
+Albany, Mallorca, Menorca y  Valencia. Para los scrappings disponibles en   
+[Inside Airbnb](https://insideairbnb.com/)  el 14-11-2024;  en este enlace  
+se dispones de más información sobre los variables en 
+[get-the-data](https://insideairbnb.com/get-the-data/). Cada Carpeta de la zona 
+contiene para cada fecha en las que se recogieron los datos una  carpeta con  
+varios ficheros. Por ejemplo para Menorca tenemos las  muestras en 4 
+periodos de tiempo: 
+
+
+```{r}
+dir("data/menorca")
+```
+En cada carpeta, por ejemplo la primera, tenemos los mismos ficheros.
+
+
+```{r}
+dir("data/menorca/2023-09-25/")
+```
+
+## Carga de datos del fichero listings.csv.gz
+
+El archivo `listings.csv.gz` es un fichero csv comprimido. 
+Descomprimido ocupa bastante espacio sí que lo leeremos con la función 
+`read_csv` que ya descomprime los archivos `gz`.
+
+Cargado o leyendo el archivo  varias veces  los tipos de datos adecuados  
+con los que leeremos con el siguiente código:
+
+
+```{r}
+listings <- read_csv("data/menorca/2023-09-25/listings.csv.gz")
+glimpse(listings)
+```
+
+
+Releemos dando formato adecuado, por ejemplo las  fechas las leemos como `Date` 
+y no como `character`, los id como `character` y no cómo `numeric`.
+Algunas variables llevan símbolos `$` o `%` que  los leemos como `character` y  
+hay que convertirlos a `numeric` como sucede con `price`,
+`host_response_rate` o `host_acceptance_rate`. También hay otras variables 
+lógicas.  El lector verá en el código 
+cómo hemos parseado las variables.   Volvemos a leer el archivo de forma más 
+adecuada (aunque no perfecta):               
+
+
+````{r}
+listings<- read_csv("data/menorca/2023-09-25/listings.csv.gz",
+col_types = cols(                         
+id =col_character(),
+listing_url =col_character(),
+scrape_id =col_character(),
+last_scraped =col_date(format = "%Y%m%d"),
+source =col_character(),
+name =col_character(),
+description =col_character(),
+neighborhood_overview =col_character(),
+picture_url =col_character(),
+host_id =col_character(),
+host_url =col_character(),
+host_name =col_character(),
+host_since =col_date(format = "%Y%m%d"),
+host_location =col_character(),
+host_about =col_character(),
+host_response_time =col_number(),
+host_response_rate =col_number(),
+host_acceptance_rate =col_number(),
+host_is_superhost =col_logical(),
+host_thumbnail_url =col_character(),
+host_picture_url =col_character(),
+host_neighbourhood =col_character(),
+host_listings_count =col_number(),
+host_total_listings_count =col_number(),
+host_verifications =col_character(),
+host_has_profile_pic =col_logical(),
+host_identity_verified =col_logical(),
+neighbourhood =col_character(),
+neighbourhood_cleansed =col_character(),
+neighbourhood_group_cleansed =col_character(),
+latitude =col_number(),
+longitude =col_number(),
+property_type =col_character(),
+room_type =col_character(),
+accommodates =col_number(),
+bathrooms =col_logical(),
+bathrooms_text =col_character(),
+bedrooms =col_number(),
+beds =col_number(),
+amenities =col_character(),
+price =col_number(),
+minimum_nights =col_number(),
+maximum_nights =col_number(),
+minimum_minimum_nights =col_number(),
+maximum_minimum_nights =col_number(),
+minimum_maximum_nights =col_number(),
+maximum_maximum_nights =col_number(),
+minimum_nights_avg_ntm =col_number(),
+maximum_nights_avg_ntm =col_number(),
+calendar_updated =col_logical(),
+has_availability =col_logical(),
+availability_30 =col_number(),
+availability_60 =col_number(),
+availability_90 =col_number(),
+availability_365 =col_number(),
+calendar_last_scraped =col_date(format = "%Y%m%d"),
+number_of_reviews =col_number(),
+number_of_reviews_ltm =col_number(),
+number_of_reviews_l30d =col_number(),
+first_review =col_date(format = "%Y%m%d"),
+last_review =col_date(format = "%Y%m%d"),
+review_scores_rating =col_number(),
+review_scores_accuracy =col_number(),
+review_scores_cleanliness =col_number(),
+review_scores_checkin =col_number(),
+review_scores_communication =col_number(),
+review_scores_location =col_number(),
+review_scores_value =col_number(),
+license =col_character(),
+instant_bookable =col_logical(),
+calculated_host_listings_count =col_number(),
+calculated_host_listings_count_entire_homes =col_number(),
+calculated_host_listings_count_private_rooms =col_number(),
+calculated_host_listings_count_shared_rooms =col_number(),
+reviews_per_month =col_number()))
+
+```
+
+Como vemos  hay  incidencias en observaciones que afectan a las columnas 
+algunas conlumnas que podemos ver con la función `problems(listings1)`
+
+Omitiremos las columnas con problemas para esta práctica.  De hecho vamos a reducir las columnas con las que trabajamos, por ejemplo seleccionamos las columnas:
+
+
+
+```{r}
+listings <- listings %>% select(
+  id,
+  price,
+  longitude,
+  latitude,
+  property_type,
+  room_type,
+  accommodates,
+  bedrooms,
+  beds,
+  amenities,
+  number_of_reviews,
+  review_scores_rating,
+  review_scores_value,
+  latitude,
+  longitude,
+  host_is_superhost,
+  host_name
+)
+```
+
+
+Ahora tenemos
+
+```{r}
+glimpse(listings)
+```
+
+# Lectura de todas las observaciones de listings de una zona: Mallorca
+
+
+El siguiente código lee todas las carpetas de la zona de Mallorca y lee los 
+archivos `listings.csv` de cada una de ellas. 
+y  genera un listing que contenga todos los apartamentos (los `id`) que 
+aparecen en los 4 scrappings que disponemos de Mallorca. Hemos parametrizado 
+el código para que se pueda cambiar a otra zona se quiera analizar.
+
+Se comenta el código para facilitar su lectura (generado...).
+
+```{r}
+# Cargar biblioteca necesaria
+library(tidyverse)
+
+# Definir directorios y seleccionar uno para procesar
+dir_mallorca <- dir("data/mallorca")
+dir_zone <- dir_mallorca  # Aquí se puede cambiar la zona según sea necesario
+
+# Función para leer archivos de listado
+read_data_listing <- function(dir) {
+  readr::read_csv(
+    paste0("data/mallorca/", dir, "/listings.csv.gz"),
+    col_types = cols(                         
+id =col_character(),
+listing_url =col_character(),
+scrape_id =col_character(),
+last_scraped =col_date(format = "%Y%m%d"),
+source =col_character(),
+name =col_character(),
+description =col_character(),
+neighborhood_overview =col_character(),
+picture_url =col_character(),
+host_id =col_character(),
+host_url =col_character(),
+host_name =col_character(),
+host_since =col_date(format = "%Y%m%d"),
+host_location =col_character(),
+host_about =col_character(),
+host_response_time =col_number(),
+host_response_rate =col_number(),
+host_acceptance_rate =col_number(),
+host_is_superhost =col_logical(),
+host_thumbnail_url =col_character(),
+host_picture_url =col_character(),
+host_neighbourhood =col_character(),
+host_listings_count =col_number(),
+host_total_listings_count =col_number(),
+host_verifications =col_character(),
+host_has_profile_pic =col_logical(),
+host_identity_verified =col_logical(),
+neighbourhood =col_character(),
+neighbourhood_cleansed =col_character(),
+neighbourhood_group_cleansed =col_character(),
+latitude =col_number(),
+longitude =col_number(),
+property_type =col_character(),
+room_type =col_character(),
+accommodates =col_number(),
+bathrooms =col_logical(),
+bathrooms_text =col_character(),
+bedrooms =col_number(),
+beds =col_number(),
+amenities =col_character(),
+price =col_number(),
+minimum_nights =col_number(),
+maximum_nights =col_number(),
+minimum_minimum_nights =col_number(),
+maximum_minimum_nights =col_number(),
+minimum_maximum_nights =col_number(),
+maximum_maximum_nights =col_number(),
+minimum_nights_avg_ntm =col_number(),
+maximum_nights_avg_ntm =col_number(),
+calendar_updated =col_logical(),
+has_availability =col_logical(),
+availability_30 =col_number(),
+availability_60 =col_number(),
+availability_90 =col_number(),
+availability_365 =col_number(),
+calendar_last_scraped =col_date(format = "%Y%m%d"),
+number_of_reviews =col_number(),
+number_of_reviews_ltm =col_number(),
+number_of_reviews_l30d =col_number(),
+first_review =col_date(format = "%Y%m%d"),
+last_review =col_date(format = "%Y%m%d"),
+review_scores_rating =col_number(),
+review_scores_accuracy =col_number(),
+review_scores_cleanliness =col_number(),
+review_scores_checkin =col_number(),
+review_scores_communication =col_number(),
+review_scores_location =col_number(),
+review_scores_value =col_number(),
+license =col_character(),
+instant_bookable =col_logical(),
+calculated_host_listings_count =col_number(),
+calculated_host_listings_count_entire_homes =col_number(),
+calculated_host_listings_count_private_rooms =col_number(),
+calculated_host_listings_count_shared_rooms =col_number(),
+reviews_per_month =col_number()))
+}
+```
+
+
+Ahora unimos las cuatro muestras temporales
+
+```{r}
+# Leer y almacenar los datos de cada archivo en una lista
+listing_list <- lapply(dir_zone, read_data_listing)
+
+# Verificar estructura y consistencia de datos
+sapply(listing_list, dim)          # Verificar que todos tengan 75 columnas
+names_list <- lapply(listing_list, names)
+all_same_names <- length(unique(names_list)) == 1  # Chequear nombres de columnas
+
+# Analizar IDs de listados para observar consistencia entre periodos
+id_list <- lapply(listing_list, function(x) x$id)
+id_global <- unlist(id_list)
+unique_id_count <- length(unique(id_global))       # Conteo de IDs únicos
+
+# Encontrar IDs comunes en todos los periodos
+id_common <- Reduce(intersect, id_list)
+
+# Consolidar todos los listados en un solo data frame
+listings_mallorca <- do.call(rbind, listing_list)
+
+# Crear un data frame con los listados comunes en todos los periodos
+listings_common0 <- listings_mallorca %>% filter(id %in% id_common)
+```
+
+
+
+Por último de los comunes seleccionamos unas cuantas variables para hacer un 
+análisis exploratorio, PERO CUIDADO, notemos que hemos perdido información de las fechas de los reviews, por lo que deberíamos de tener cuidado con el análisis que hagamos con estas variables y de algunas variables como `price`.
+
+
+
+```{r}
+listings_common1 <- listings_common0 %>%
+  select(
+    id,
+    price,
+    longitude,
+    latitude,
+    property_type,
+    room_type,
+    accommodates,
+    bedrooms,
+    beds,
+    number_of_reviews,
+    review_scores_rating,
+    review_scores_value,
+    latitude,
+    longitude,
+    host_is_superhost,
+    host_name,
+    neighbourhood_cleansed)
+glimpse(listings_common1)
+```
+
+
+

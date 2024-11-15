@@ -1,0 +1,120 @@
+---
+title: "ABB Albany  Mallorca, Menorca y Valencia   Data Sets"
+author: 'En grupo: NOMBRE'
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,cahe=TRUE)
+```
+
+
+```{r load_packages, include=FALSE}
+#install.packages("tidyverse")
+library(tidyverse)
+# Alternatively, install just rvest:
+#install.packages("rvest")
+library(rvest)
+```
+
+
+## Scraping data años 2004 a 2024
+
+Scrapping la web [Inside Airbnb](https://insideairbnb.com/) es una web que realiza de forma altruista un scraping de los datos de Airbnb y los pone a disposición de cualquiera para análisis de del territorio. En sus palabras su objetivo es 
+
+"*Airbnb claims to be part of the "sharing economy" and disrupting the hotel industry. However, data shows that the majority of Airbnb listings in most cities are entire homes, many of which are rented all year round - disrupting housing and communities.    
+*"
+
+Los datos  están en formato csv y se pueden descargar de la web desde la sección DATA, concretamente [https://insideairbnb.com/get-the-data/](https://insideairbnb.com/get-the-data/).
+
+
+
+```{r}
+url="https://insideairbnb.com/get-the-data/"
+```
+
+Ahpra según la localización de los datos, en este caso Menorca, se puede acceder a los datos de Menorca desde en la siguiente url:
+
+[https://data.insideairbnb.com/spain/islas-baleares/menorca/]
+
+https://data.insideairbnb.com/spain/islas-baleares/menorca/2024-09-13/data/listings.csv.gz
+
+
+
+```{r}
+#leer_abb=function(anyo){
+  #anyo=2004
+  #https://data.insideairbnb.com/spain/islas-baleares/mallorca/2024-09-13/data/listings.csv.gz
+url="https://data.insideairbnb.com/spain/islas-baleares/mallorca/2024-09-13/data/"
+
+lista=c("listings.csv.gz","calendar.csv.gz",
+"reviews.csv.gz","listings.csv",
+"calendar.csv","reviews.csv",
+"neighbourhoods.csv","neighbourhoods.geojson")
+anyo=2024
+
+  for (i in 1:length(lista)){
+    url2=paste0(url,lista[i])
+    download.file(url2,destfile=paste0("data/",anyo,"/",lista[i]))
+  }
+
+
+
+
+```
+
+Gurdamos en un objeto
+
+```{r}
+save(sorteos_euro_millones_04_24, file = "sorteos_euro_millones_04_24.RData")
+```
+
+
+
+
+
+
+
+
+
+
+Cada  data set de la lista es un año  y contiene la fecha del  año del sorteo en una cadena dia-mes y las bolas y estrellas del sorteo.  Además algunos años tienen más variables adicionales. No todos los años tienen el mismo número de sorteos.
+
+
+Guardamos el obe
+
+
+
+
+2004-2008
+2:9
+2:9
+2:9
+2:9
+2:9
+2009-2015
+
+2:9
+2:9
+3:10
+3:10
+3:10
+3:10
+3:10
+
+
+
+2016-2017
+3:11 lleva Millon 2016
+3:11  2017
+
+18-24
+3:11
+3:11
+3:11
+3:11
+3:11
+3:11
+3:11
+
