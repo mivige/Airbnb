@@ -1,0 +1,447 @@
+---
+title: "Carga de datos para taller 2024-2025"
+author: "Taller"
+lang: es
+format:
+  html:
+    theme: slate
+    toc: true
+    html-math-method: katex
+    css: styles.css
+    code-tools: true
+    code-fold: true
+    collapse: true
+---      
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE,cache=FALSE)
+# packages
+library(tidyverse)
+```
+
+
+# Lectura de todas las observaciones de listings de una zona
+
+El siguiente código lee todas las carpetas de la zona de Mallorca y lee los 
+archivos `listings.csv` de cada una de ellas. y genera un listing que contenga 
+todos los apartamentos (los `id`) que aparecen en los 4 scrappings que disponemos
+de Mallorca. Hemos parametrizado el código para que se pueda cambiar a otra zona 
+se quiera analizar.
+
+Se comenta el código para facilitar su lectura (generado...).
+
+Creamos una función para la lectura, necesita `zone` que es la zona que se quiere leer.
+
+
+```{r}
+# Cargar biblioteca necesaria
+library(tidyverse)
+
+
+# Definir directorios y seleccionar uno para procesar
+
+# Función para leer archivos de listado
+read_data_listing <- function(zone) {
+dir_name_zone <- paste0("../data/",zone)
+dir_zone_date <- dir(dir_name_zone)
+file_path <- paste0("../data/", zone, "/", dir_zone_date, "/listings.csv.gz")
+rd_listings <- function(file){ 
+  readr::read_csv(file,
+    col_types = cols(                         
+id =col_character(),
+listing_url =col_character(),
+scrape_id =col_character(),
+last_scraped =col_date(format = "%Y%m%d"),
+source =col_character(),
+name =col_character(),
+description =col_character(),
+neighborhood_overview =col_character(),
+picture_url =col_character(),
+host_id =col_character(),
+host_url =col_character(),
+host_name =col_character(),
+host_since =col_date(format = "%Y%m%d"),
+host_location =col_character(),
+host_about =col_character(),
+host_response_time =col_number(),
+host_response_rate =col_number(),
+host_acceptance_rate =col_number(),
+host_is_superhost =col_logical(),
+host_thumbnail_url =col_character(),
+host_picture_url =col_character(),
+host_neighbourhood =col_character(),
+host_listings_count =col_number(),
+host_total_listings_count =col_number(),
+host_verifications =col_character(),
+host_has_profile_pic =col_logical(),
+host_identity_verified =col_logical(),
+neighbourhood =col_character(),
+neighbourhood_cleansed =col_character(),
+neighbourhood_group_cleansed =col_character(),
+latitude =col_number(),
+longitude =col_number(),
+property_type =col_character(),
+room_type =col_character(),
+accommodates =col_number(),
+bathrooms =col_logical(),
+bathrooms_text =col_character(),
+bedrooms =col_number(),
+beds =col_number(),
+amenities =col_character(),
+price =col_number(),
+minimum_nights =col_number(),
+maximum_nights =col_number(),
+minimum_minimum_nights =col_number(),
+maximum_minimum_nights =col_number(),
+minimum_maximum_nights =col_number(),
+maximum_maximum_nights =col_number(),
+minimum_nights_avg_ntm =col_number(),
+maximum_nights_avg_ntm =col_number(),
+calendar_updated =col_logical(),
+has_availability =col_logical(),
+availability_30 =col_number(),
+availability_60 =col_number(),
+availability_90 =col_number(),
+availability_365 =col_number(),
+calendar_last_scraped =col_date(format = "%Y%m%d"),
+number_of_reviews =col_number(),
+number_of_reviews_ltm =col_number(),
+number_of_reviews_l30d =col_number(),
+first_review =col_date(format = "%Y%m%d"),
+last_review =col_date(format = "%Y%m%d"),
+review_scores_rating =col_number(),
+review_scores_accuracy =col_number(),
+review_scores_cleanliness =col_number(),
+review_scores_checkin =col_number(),
+review_scores_communication =col_number(),
+review_scores_location =col_number(),
+review_scores_value =col_number(),
+license =col_character(),
+instant_bookable =col_logical(),
+calculated_host_listings_count =col_number(),
+calculated_host_listings_count_entire_homes =col_number(),
+calculated_host_listings_count_private_rooms =col_number(),
+calculated_host_listings_count_shared_rooms =col_number(),
+reviews_per_month =col_number()))
+}
+
+# Ahora unimos las cuatro muestras temporales
+
+# Leer y almacenar los datos de cada archivo en una lista
+listings_list <- lapply(file_path, rd_listings)
+ 
+
+# Verificar estructura y consistencia de datos
+#sapply(listings_list, dim)          # Verificar que todos tengan 75 columnas
+names_list <- lapply(listings_list, names)
+all_same_names <- length(unique(names_list)) == 1  # Chequear nombres de columnas
+
+# Analizar IDs de listados para observar consistencia entre periodos
+id_list <- lapply(listings_list, function(x) x$id)
+id_global <- unlist(id_list)
+unique_id_count <- length(unique(id_global))       # Conteo de IDs únicos
+
+# Encontrar IDs comunes en todos los periodos
+id_common <- Reduce(intersect, id_list)
+
+# Añadir Date  de cada periodo a cada tible
+
+for(i in 1:length(listings_list)){
+  listings_list[[i]]<- mutate(listings_list[[i]],
+                              date=as.Date(dir_zone_date[i]),.before=1)
+}
+
+#listings_list <- listings_all %>% mutate(date = dir_zone_date)
+
+# Consolidar todos los listados en un solo data frame
+
+listings_all <- do.call(rbind, listings_list)
+
+# Crear un data frame con los listados comunes en todos los periodos
+listings_common0 <- listings_all %>% filter(id %in% id_common)
+
+# listings_common0 select variables de interés
+
+listings_common0_select <- listings_common0 %>%
+  select(
+    date,
+    id,
+    price,
+    longitude,
+    latitude,
+    property_type,
+    room_type,
+    accommodates,
+    bedrooms,
+    beds,
+    number_of_reviews,
+    review_scores_rating,
+    review_scores_value,
+    latitude,
+    longitude,
+    host_is_superhost,
+    host_name,
+    neighbourhood_cleansed)
+#glimpse(listings_common1)
+
+# Guardar los datos en un archivo csv.gz y en un Rdata
+if(!file.exists("../clean_data/")) {dir.create("clean_data")}
+if(!file.exists(paste0("../clean_data/",zone))) {dir.create(paste0("../clean_data/",zone))}
+
+
+
+file=paste0("../clean_data/",zone,"/listing_common0")
+if(!file.exists(paste0(file,".csv.gz"))) {
+write_csv(listings_common0, paste0(file,".csv.gz"))
+save(listings_common0, file = paste0(file,".RData"))
+}
+
+file=paste0("../clean_data/",zone,"/listing_common0_select")
+if(!file.exists(paste0(file,".csv.gz"))) {
+write_csv(listings_common0_select, paste0(file,".csv.gz"))
+save(listings_common0_select,file = paste0(file,".RData"))
+}
+
+file=paste0("../clean_data/",zone,"/listings_all")
+if(!file.exists(paste0(file,".csv.gz"))) {
+write_csv(listings_all, paste0(file,".csv.gz"))
+  save(listings_all, file = paste0(file,".RData"))
+}
+
+}
+```
+
+
+# Listins: Mallorca, Menorca, Valencia y Albany (USA)
+
+Los datos  de `listings` ya están  en la carpeta `"../data/ZONA/FECHA"` 
+los resultados se guardan en `"../clean_data/ZONA"` en los ficheros "listing_all.RData" o en 
+"listing_all.csv.gz", así como  los ficheros del mismo nombre con el adjetivo  common0 o 
+common0_select contienen los apartamento que 
+aparecen en todos los periodos de observación.
+
+
+```{r}
+read_data_listing(zone="mallorca")
+read_data_listing(zone="menorca")
+read_data_listing(zone="valencia")
+read_data_listing(zone="albany")
+```
+
+Podeís volver a leer estos ficheros .Rdata con 
+
+```{r}
+load("../clean_data/mallorca/listings_all.RData")
+load("../clean_data/mallorca/listing_common0.RData")
+load("../clean_data/mallorca/listing_common0_select.RData")
+```
+
+Que cargan los objetos `listings_all`, `listings_common0` y `listings_common0_select`
+en el entorno de trabajo. Si queréis leer los ficheros `*.csv.gz* podéis hacerlo
+con `read_csv` de `readr`  pero tendréis que volver a parsear y asignar los 
+tipos de las variables  (ver el código de la función`read_data_listing`).
+
+
+
+# Archivos  calendar y reviews
+
+Nos queda por leer los archivos de `calendar` y `reviews` de cada zona
+que contiene los precios y disponibilidad (no creo que lo usemos 
+en este taller) y el de opiniones de cada departamento que si podemos leer. 
+
+Por ejemplo  `data/mallorca/2023-12-17/calendar.csv.gz`
+
+
+
+```{r}
+calendar=read_csv("../data/mallorca/2023-12-17/calendar.csv.gz")
+str(calendar)
+head(calendar)
+```
+
+
+o  el archivo `data/mallorca/2023-12-17/reviews.csv.gz`  con 
+
+
+```{r}
+reviews=read_csv("../data/mallorca/2023-12-17/reviews.csv.gz")
+str(reviews)
+head(reviews)
+```
+
+# Los archivos neighbourhoods.geojson y neighbourhoods.csv 
+
+Leamos uno de ellos es un mapa de la zona.
+
+el archivo neighbourhoods.geojson es un formato de mapas y el archivo  
+neighbourhoods.csv son los nombres de los municipios y sus agrupaciones 
+(si es que existen) 2 columnas.
+
+Leamos primero el segundo fichero
+
+```{r}
+municipios=read_csv("../data/mallorca/2023-12-17/neighbourhoods.csv")
+str(municipios)
+head(municipios)
+```
+Ahora para los mapas necesitamos el archivo `neighbourhoods.geojson` que
+por ejemplo podemos leer con el paquete `sf`
+
+
+```{r}
+# Instalar paquetes
+
+#install.packages("sf")
+#install.packages("tmap")
+
+# Cargar librerías
+library(sf)
+library(tmap)
+
+# Leer el archivo GeoJSON
+geojson_sf <- sf::st_read("../data/mallorca/2024-09-13/neighbourhoods.geojson")
+
+# Crear un mapa
+
+# interactivo
+tmap_mode("view") # Cambiar a modo interactivo
+tm_shape(geojson_sf) +
+  tm_polygons(col = "blue", alpha = 0.6) +
+  tm_layout(title = "Mapa - GeoJSON")
+```
+
+
+Lo podemos dibujar con ggplot2
+
+```{r}  
+# Dibujar el mapa
+ggplot(data = geojson_sf) +
+  geom_sf(fill = "lightblue", color = "darkblue") +
+  theme_minimal() +
+  labs(title = "Mapa - GeoJSON con ggplot2",
+       subtitle = "Ejemplo usando datos GeoJSON")
+```
+
+
+## Paquete geojsonio
+
+Con el paquete `geosojsonio` podemos leer el archivo geojson y
+convertirlo en un objeto `sf`
+
+
+```{r}
+#install.packages("geojsonio")
+library(geojsonio)
+
+# Leer el archivo GeoJSON
+geojson_data <- geojson_read("../data/mallorca/2024-09-13/neighbourhoods.geojson", what = "sp")
+
+# Inspeccionar el contenido
+print(head(geojson_data))
+```
+
+
+
+Podemos dibujarlo  con `ggplot` conviertiendo otra vez con `st_as_sf` a formato sf
+
+```{r}
+
+# Dibujar el mapa ggplot entienes  los objetos sf
+geojson_sf <- st_as_sf(geojson_data)
+ggplot() +
+  geom_sf(data = geojson_sf, fill = "lightblue", color = "darkblue") +
+  theme_minimal() +
+  labs(title = "Mapa a partir de un archivo GeoJSON")
+
+```
+
+# Algunos estadísticos
+
+
+```{r}
+library(kableExtra)
+tabla_stat=listings_common0_select %>% group_by(neighbourhood_cleansed) %>% 
+  summarise(N=n(),mean_price=mean(price,na.rm=TRUE),
+            sd_price=sd(price,na.rm=TRUE),
+            min_price=min(price,na.rm=TRUE),
+            max_price=max(price,na.rm=TRUE)) %>% arrange(neighbourhood_cleansed)
+knitr::kable(tabla_stat, caption = "Estadísticos de los precios por municipio",
+             format = "markdown",digits = 4,align = "r",booktabs = TRUE, 
+             col.names = c("Municipio","n","Media","Desv. típica",
+                           "Mínimo","Máximo"))%>%
+  kable_material(bootstrap_options = "striped",
+                 full_width = F, position = "center")
+```
+
+
+```{r}
+## Unir los datos del número de apartmentos con los datos geográficos
+mallorca_data <- geojson_sf %>%
+  left_join(tabla_stat, by = c("neighbourhood" = "neighbourhood_cleansed"))
+
+
+# Dibujar el mapa coloreado
+ggplot(data = mallorca_data) +
+  geom_sf(aes(fill = N), color = "black") +  # Color según número de apartamentos
+  scale_fill_viridis_c(option = "plasma", name = "Nº de Apartamentos") +  # Escala de colores
+  theme_minimal() +
+  labs(
+    title = "Distribución de Apartamentos en Mallorca",
+    subtitle = "Coloreado por número de apartamentos por municipio",
+    caption = "Fuente: Datos procesados inside AIRBNB 2024-09-13"
+  )
+```
+
+
+Por precio
+
+```{r}
+
+ggplot(data = mallorca_data) +
+  geom_sf(aes(fill = mean_price), color = "black") +  # Rellenar según precio medio
+  scale_fill_viridis_c(option = "viridis", name = "Precio medio (€)") +  # Escala de colores
+  theme_minimal() +
+  labs(
+    title = "Precio Medio de Apartamentos en Mallorca",
+    subtitle = "Coloreado por municipio",
+    caption = "Fuente: Datos procesados inside AIRBNB 2024-09-13"
+  )
+```
+
+## Mapa interactivo
+
+```{r}
+library(plotly)
+
+# Crear el gráfico base con ggplot2
+ggplot_base <- ggplot(data = mallorca_data) +
+  geom_sf(aes(fill = N, text = paste(
+    "<b>Municipio:</b>", neighbourhood, "<br>",
+    "<b>Número de apartamentos:</b>", N, "<br>",
+    "<b>Precio medio (€):</b>", round(mean_price, 2)
+  )), color = "black") +
+  scale_fill_viridis_c(option = "viridis", name = "Número de apartamentos") +
+  theme_minimal() +
+  labs(
+    title = "Mapa interactivo de Mallorca",
+    subtitle = "Número de apartamentos y precio medio por municipio",
+    caption = "Fuente: Datos procesados"
+  )
+
+# Paso 4: Convertir el gráfico a interactivo con plotly
+interactive_map <- ggplotly(ggplot_base, tooltip = "text")
+
+# Mostrar el gráfico interactivo
+interactive_map
+```
+
+
+# Enlaces y Bibliografía
+
+
+* [R for data science, Hadley Wickham, Garret  Grolemund.](https://r4ds.had.co.nz/)
+* [Fundamentos de ciencia de datos con R.](https://cdr-book.github.io/) 
+* [Tablas avanzadas: kable, KableExtra.](https://haozhu233.github.io/kableExtra/awesome_table_in_html.html)
+* [Geocomputation with R, Robin Lovelace, Jakub Nowosad, Jannes Muenchow](https://r.geocompx.org/)
+* Apuntes de R -basico y tidyverse moodel MAT3.b

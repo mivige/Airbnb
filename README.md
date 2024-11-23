@@ -1,6 +1,13 @@
-# Airbnb
-
-
+---
+title: "Readme. Taller datos Inside Airbnb"
+author: "Taller MAT3 GIN 24-25"
+date: "2024-11-15"
+output: 
+  html_document: 
+    toc: true
+    number_sections: true
+    keep_md: true
+---
 
 
 
