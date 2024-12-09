@@ -1,0 +1,78 @@
+---
+title: "Airbnb Mallorca Data Analysis"
+author: "Group [Your Team Name]"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    theme: united
+---
+
+```{r setup, include=FALSE}
+# Load required libraries and scripts
+library(tidyverse)
+library(kableExtra)
+library(sf)
+
+# Source all analysis scripts
+source("../R/01_data_loading.R")
+source("../R/02_descriptive_stats.R")
+source("../R/03_normality_test.R")
+
+# Set global chunk options
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+```
+
+# Introduction
+
+## Project Overview
+This report analyzes Airbnb listings in Mallorca across four different time periods.
+
+## Data Sources
+- Platform: Inside Airbnb
+- Periods: 2023-12-17, 2024-03-23, 2024-06-19, 2024-09-13
+
+# Descriptive Statistics
+
+## Price and Reviews by Municipality
+
+```{r descriptive_stats}
+# Display descriptive statistics tables
+price_stats %>% 
+  kable("html") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+reviews_stats %>% 
+  kable("html") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+# Normality Assessment
+
+```{r normality_assessment}
+# Perform normality tests for Palma and Pollença
+palma_price_normality <- assess_normality(airbnb_data$listings, "Palma de Mallorca", "price")
+pollenca_price_normality <- assess_normality(airbnb_data$listings, "Pollença", "price")
+
+# Display normality test results and plots
+print(palma_price_normality$shapiro_test)
+print(pollenca_price_normality$shapiro_test)
+
+# Plots
+palma_price_normality$qq_plot
+palma_price_normality$density_plot
+pollenca_price_normality$qq_plot
+pollenca_price_normality$density_plot
+```
+
+# Conclusion
+
+[To be completed with final analysis findings]
