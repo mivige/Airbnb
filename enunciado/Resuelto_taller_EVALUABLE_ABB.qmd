@@ -1,0 +1,171 @@
+---
+title: "Solución  taller  en grupo Mat3 GIN 2024-2025"
+author: "Angus Pelegrín, Michele , Finn Dicke"
+lang: es
+format:
+  html:
+    theme: superhero
+    toc: true
+    html-math-method: katex
+    code-tools: true
+    code-fold: true
+    collapse: true
+    keep-md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE,cache=FALSE)
+# packages
+library(tidyverse)
+```
+
+# Instrucciones para el taller
+
+Se entrega en grupos que deben de estar constituidos en la actividad de grupos. Los grupos son de 2 o 3 ESTUDIANTES, loa caso especiales consultadlos con el profesor para que los autorice.
+
+**Enlaces y Bibliografía**
+
+-   [R for data science, Hadley Wickham, Garret Grolemund.](https://r4ds.had.co.nz/)
+-   [Fundamentos de ciencia de datos con R.](https://cdr-book.github.io/)
+-   [Tablas avanzadas: kable, KableExtra.](https://haozhu233.github.io/kableExtra/awesome_table_in_html.html)
+-   [Geocomputation with R, Robin Lovelace, Jakub Nowosad, Jannes Muenchow](https://r.geocompx.org/)
+-   Apuntes de R-basico y tidyverse moodel MAT3.
+
+## Objetivo MALLORCA
+
+Leeremos los siguientes datos de la zona de etiqueta `mallorca` con el código siguiente:
+
+```{r}
+load("clean_data/mallorca/listing_common0_select.RData")
+ls()
+str(listings_common0_select)
+```
+
+**listings**
+
+Hemos cargado el objeto `listing_common0_select` que contiene los datos de los 4 periodos de apartamentos de inside Airbnb de Mallorca con unas 15 ó 16 variables.
+
+Notemos que cada apartamento:
+
+-   queda identificado por id y por date que nos da el periodo en la que apareció el dato.
+-   así que cada apartamento aparece 4 veces ya que hemos elegido solo los apartamentos que aparecen en las 4 muestras.
+-   Las muestras son `r unique(listings_common0_select$date)`,
+
+```{r}
+unique(listings_common0_select$date)
+```
+
+**reviews**
+
+Estos datos necesitan leerse de forma adecuada, las columnas 1, 2 y 4 deben ser de tipo `character` las otras son correctas
+
+```{r}
+reviews=read_csv("data/mallorca/2023-12-17/reviews.csv.gz")
+str(reviews)
+head(reviews)
+```
+
+**neighbourhoods.csv**
+
+Son dos columnas y la primera es una agrupación de municipios (están NA) y la segunda es el nombre del municipio
+
+```{r}
+municipios=read_csv("data/mallorca/2023-12-17/neighbourhoods.csv")
+str(municipios)
+head(municipios)
+```
+
+**neighbourhoods.geojson**
+
+Es el mapa de Mallorca, o podemos leer así:
+
+```{r}
+library(sf)
+library(tmap)
+
+# Leer el archivo GeoJSON
+geojson_sf <- sf::st_read("data/mallorca/2024-09-13/neighbourhoods.geojson")
+
+# Crear un mapa
+
+# interactivo
+tmap_mode("plot") # Cambiar a modo  view/plot   que es interactivo/estático
+tm_shape(geojson_sf) +
+  tm_polygons(col = "cyan", alpha = 0.6) +
+  tm_layout(title = "Mapa - GeoJSON Mallorca con municipios")
+```
+
+Tenéis que consultar en la documentación de inside Airbnb para saber que significa cada variable. Os puede ser útil leer los ficheros [DATA_ABB_modelo_de_datos.html](DATA_ABB_modelo_de_datos.html) y [DATA_ABB_modelo_de_datos.pdf](DATA_ABB_modelo_de_datos.html) en los que se explica el modelo de datos de inside Airbnb y como se cargan en el espacio de trabajo.
+
+Responder las siguientes preguntas con formato Rmarkdown (.Rmd) o quarto (.qmd) y entregad la fuente un fichero en formato html como salida del informe. Se puntúa la claridad de la respuesta, la calidad de la redacción y la corrección de la respuesta.
+
+## Pregunta 1 (**1punto**)
+
+Del fichero con los datos de listings `listing_common0_select.RData` calcula los estadísticos descriptivos de las variable `price` y de la variable `number_of_reviews` agrupados por municipio y por periodo.
+
+Presenta los resultados con una tabla de kableExtra.
+
+###Solución pregunta 1
+
+```{r}
+library()
+library(kableExtra)
+
+```
+
+
+## Pregunta 2 (**1punto**)
+
+Consideremos las variables `price` y `number_of_reviews` de Pollença y Palma del periodo "2024-09-13", del fichero `listing_common0_select.RData`. Estudiad si estos datos se aproximan a una distribución normal gráficamente . Para ello, dibujad el histograma , la función kernel que aproxima la densidad y la densidad de la normal de media y varianza las de las muestras de las variables `price` (para precios mayores de 50 y menores de 400) y `number_of_reviews` para Palma y 	
+Pollença
+
+## Pregunta 3 (**1punto**)
+
+Con los  datos de `listing_common0_select` con os datos de todos los periodos. Contrastar si la media del precio en Pollença es igual a la de Palma **contra** que es mayor que en Palma para los precios mayores que 50 euros y menores de 400. Construid la hipótesis nula y alternativa, calculad el $p$-valor y el intervalo de confianza asociado al contraste. Justifica técnicamente la conclusión del contraste.
+
+## Pregunta 4 (**1punto**)
+
+Con los  datos de `listing_common0_select`, contrastar si las medias de los precios en Palma entre los periodos "2023-12-17" y "2024-03-23" son iguales contra que son menores en 2023. Construid la hipótesis nula y alternativa, calculad el $p$-valor y el intervalo de confianza asociado al contraste. Haced un diagrama de caja comparativo de los precios por municipio y coméntalo
+
+## Pregunta 5 (**1punto**)
+
+Calcular la proporción de apartamentos de la muestra "2024-03-23" con media de valoración `review_scores_rating` mayor que 4 en Palma y en Pollença son iguales contra que son distintas. Construid un intervalo de confianza para la diferencia de proporciones.
+
+## Pregunta 6 (**1punto**)
+
+Calcular la proporción de apartamentos de los periodos "2023-12-17" y "2024-03-23" con media de valoración `review_scores_rating` mayor que 4 en Palma y en Pollença son iguales contra que son distintas.
+
+## Pregunta 7 (**1punto**)
+
+La [Zipf's law es una ley empírica](https://en.wikipedia.org/wiki/Zipf%27s_law#Word_frequencies_in_natural_languages) que dice que la frecuencia de las palabras en un texto es inversamente proporcional a su rango. Decidid si la ley se ajusta a los datos de la longitud de los comentarios de los apartamentos de la muestra "2023-12-17" de Palma. Para ello, haced un análisis de regresión lineal de la frecuencia de las longitudes de los comentarios de los apartamentos de Palma y el rango de las longitudes de los comentarios. Justificad la respuesta, estadísticamente y gráficamente.
+
+Como ayuda estudiar el siguiente código, utilizadlo y comentadlo.
+
+```{r}
+library(stringr)
+head(reviews)
+length_rewiews=stringr::str_count(reviews$comments,"\\w+")
+head(table(length_rewiews))
+```
+
+```{r}
+aux=table(length_rewiews)
+head(aux)
+head(names(aux))
+tbl=tibble( L=as.numeric(names(aux)),Freq=as.numeric(aux),
+            Rank=rank(L),Log_Freq=log(Freq),Log_Rank=log(Rank))
+str(tbl)
+```
+
+```{r}
+tbl2=tbl %>% filter(Rank>10) %>% filter(Rank<1000)
+sol1=lm(tbl2$Freq~tbl2$Rank)
+summary(sol1)
+
+sol2=lm(tbl2$Freq~tbl2$Log_Rank)
+summary(sol2)
+
+sol3=lm(tbl2$Log_Freq~tbl2$Log_Rank)
+summary(sol3)
+```
