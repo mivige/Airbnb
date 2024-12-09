@@ -1,4 +1,4 @@
-# 01_data_loading.R
+# data_loading.R
 # Airbnb Mallorca Data Analysis
 # Data Loading and Preprocessing Script
 

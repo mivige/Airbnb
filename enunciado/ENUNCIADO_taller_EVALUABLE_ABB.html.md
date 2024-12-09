@@ -300,7 +300,7 @@ Con los  datos de `listing_common0_select` con os datos de todos los periodos. C
 
 ## Pregunta 4 (**1punto**)
 
-Con los  datos de `listing_common0_select`, contrastar si las medias de los precios en Palma entre los periodos "2023-12-17" y "2024-03-23" son iguales contra que son menores en 2023. Construid la hipótesis nula y alternativa, calculad el $p$-valor y el intervalo de confianza asociado al contraste. Haced un diagrama de caja comparativo de los precios por municipio y coméntalo
+Con los  datos de `listing_common0_select`, contrastar si las medias de los precios en Palma entre los periodos "2023-12-17" y "2024-03-23" son iguales contra que son menores en 2023. Construid la hipótesis nula y alternativa, calculad el $p$-valor y el intervalo de confianza asociado al contraste. Haced un diagrama de caja comparativo de los precios por periodo y coméntalo
 
 ## Pregunta 5 (**1punto**)
 
@@ -308,7 +308,7 @@ Calcular la proporción de apartamentos de la muestra "2024-03-23" con media de 
 
 ## Pregunta 6 (**1punto**)
 
-Calcular la proporción de apartamentos de los periodos "2023-12-17" y "2024-03-23" con media de valoración `review_scores_rating` mayor que 4 en Palma y en Pollença son iguales contra que son distintas.
+Calcular la proporción de apartamentos de los periodos "2023-12-17" y "2024-03-23" con media de valoración `review_scores_rating` mayor que 4 en Palma son iguales contra que son distintas.
 
 ## Pregunta 7 (**1punto**)
 
