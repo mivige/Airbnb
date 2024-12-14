@@ -23,5 +23,3 @@ stats <- data_prepared %>%
 stats %>%
   kable("html", caption = "Estadísticos descriptivos por municipio y año") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
-
-

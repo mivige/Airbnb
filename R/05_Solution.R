@@ -1,5 +1,3 @@
-library(dplyr)
-
 # Filtrar los datos para el periodo "2024-03-23" y los municipios deseados
 rating_Pollenca= listings_common0_select %>%
   filter(neighbourhood_cleansed=="Pollença" & date=="2024-03-23")
