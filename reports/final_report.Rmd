@@ -1,21 +1,21 @@
 ---
 title: "Airbnb Mallorca Data Analysis"
-author: "Angus, Michele, Finn Dicke"
+author: "Angus, Michele Vincenzo Gentile, Finn Dicke"
 date: "`r Sys.Date()`"
 output:
-  pdf_document:
-    toc: true
   html_document:
     toc: true
     toc_float: true
     code_folding: hide
     theme: united
+  pdf_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
 # Load required libraries
 library(tidyverse)
-#library(kableExtra)
+library(kableExtra)
 library(sf)
 library(ggplot2)
 library(tmap)
@@ -133,8 +133,9 @@ library(kableExtra)
 
 # Paso 1: Preparar los datos
 # Convertir las fechas a formato 'Year' y agrupar por municipio y año
-data_prepared <- listings_common0_select %>%
-  mutate(year = format(date, "%Y")) %>%  # Extraer el año de la columna 'date'
+data_prepared <- airbnb_data$listings %>%
+  mutate(date = as.Date(date),  # Asegurarse de que 'date' está en formato Date
+         year = format(date, "%Y")) %>%  # Extraer el año
   group_by(neighbourhood_cleansed, year)  # Agrupar por municipio y año
 
 # Paso 2: Calcular estadísticos descriptivos
@@ -246,17 +247,99 @@ print(plot_reviews_palma)
 
 ```
 
-# 03 - 
-
-```{r question_3}
-
-```
-
-# 04 - 
-
-```{r question_4}
-
-```
+# 03 - Comparison & hypothesis testing
+En este apartado se compara el precio medio de los alojamientos en los
+municipios de Palma y Pollensa, y se realiza un contraste de hipótesis
+para determinar si existe una diferencia significativa entre los precios
+medios de ambos municipios.
+1.  **Preparación de los Datos:**
+    -   Se filtran los datos de precios de los alojamientos en Palma y
+        Pollensa, limitando el rango de precios entre 50 y 400 euros.
+    -   Se calcula el precio medio de los alojamientos en cada
+        municipio.
+2.  **Comparación de Datos:**
+    -   Se calcula la diferencia entre los precios medios de Palma y
+        Pollensa.
+3.  **Contraste de Hipótesis:**
+    -   Se plantea la hipótesis nula y alternativa para el contraste.
+    -   Se calcula el p-valor y el intervalo de confianza asociado al
+        contraste.
+4.  **Conclusión**
+    ```{r question_3, eval = FALSE}
+    # Paso 1: Guardar los datos de precios de palma y pollensa entre 50 y 400euros en dos objetos
+    palma_prepared <- airbnb_data$listings %>% 
+      filter(neighbourhood_cleansed == "Palma" & price >= 50 & price <= 400) %>% 
+      pull(price)
+    precio_medio_palma <- mean(palma_prepared)#precio medio de palma
+    pollensa_prepared <- airbnb_data$listings %>%
+      filter(neighbourhood_cleansed == "Pollensa" & price >= 50 & price <= 400) %>% 
+      pull(price)
+    precio_medio_pollensa <- mean(pollensa_prepared)#precio medio de pollensa
+    # Paso 2: Comparar los datos
+      diff_precio = precio_medio_palma - precio_medio_pollensa
+      
+    # Paso 3: Construid la hipótesis nula y alternativa,
+    # calculad el p-valor y el intervalo de confiaza asociado al contraste
+      
+    # H0: No hay diferencia entre los precios medios de Palma y Pollensa
+    # H1: Hay diferencia entre los precios medios de Palma y Pollensa
+      
+    p_value <- t.test(palma_prepared, pollensa_prepared, alternative = "two.sided")$p.value
+    conf_int <- t.test(palma_prepared, pollensa_prepared, alternative = "two.sided")$conf.int
+    # Paso 4: Justifica tecnicamente la conclusión del contraste.
+    # Si el p-valor es menor que el nivel de significancia (0.05), rechazamos la hipótesis nula.
+    # En este caso, el p-valor es menor que 0.05, por lo que rechazamos la hipótesis nula.
+    # Por lo tanto, hay una diferencia significativa entre los precios medios de Palma y Pollensa.
+    # Paso 5: Presentar los resultados de forma clara y concisa
+    kable(data.frame(precio_medio_palma, precio_medio_pollensa, diff_precio, p_value, conf_int), 
+          col.names = c("Precio medio Palma", "Precio medio Pollensa", "Diferencia de precios", "P-valor", "Intervalo de confianza"), 
+          align = "c") %>%
+      kable_styling(full_width = F)
+    ```
+# 04 - Comparación de intervalos, hipotesis y boxplot
+En este apartado se contrastan los precios medios de los alojamientos en
+Palma entre dos periodos específicos: **17 de diciembre de 2023** y **30
+de junio de 2024**. Se realiza un contraste de hipótesis para determinar
+si existe una diferencia significativa entre los precios medios en estos
+dos periodos.
+1.  **Preparación de los Datos:**
+    -   Se filtran los datos de precios de los alojamientos en Palma
+        para los periodos especificados.
+    -   Se calcula el precio medio de los alojamientos en cada periodo.
+2.  **Comparación de Datos:**
+    -   Se calcula la diferencia entre los precios medios de Palma en
+        ambos periodos.
+3.  **Contraste de Hipótesis:**
+    -   Se plantea la hipótesis nula y alternativa para el contraste.
+    -   Se calcula el p-valor y el intervalo de confianza asociado al
+        contraste.
+4.  **Boxplot:**
+    -   Se genera un gráfico de caja (*boxplot*) para visualizar la
+        distribución de los precios en Palma en los dos periodos
+        comparados.
+    ```{r question_4, eval = FALSE}
+    # Paso 1: Preparar los datos
+    palma_prepared_1 <- airbnb_data$listings %>% #Guarda precios palma 2023-12-17
+      filter(neighbourhood_cleansed == "Palma" & date == "2023-12-17") %>% 
+      pull(price)
+    avg_palma_1 <- mean(palma_prepared_1) #precio medio de palma 2023-12-17
+    palma_prepared_2 <- airbnb_data$listings %>% #Guarda precios palma 2024-06-30
+      filter(neighbourhood_cleansed == "Palma" & date == "2024-06-30") %>% 
+      pull(price)
+    avg_palma_2 <- mean(palma_prepared_2) #precio medio de palma 2024-06-30
+    # Paso 2: Comparar las medias
+    diff_avg_palma <- avg_palma_1 - avg_palma_2
+    # Paso 3: Construir la hipótesis nula y alternativa, calcular el p-valor y el intervalo de confianza asociado al contraste
+    # H0: No hay diferencia entre los precios medios de Palma en los periodos “2023-12-17” y “2024-06-30”
+    # H1: Hay diferencia entre los precios medios de Palma en los periodos “2023-12-17” y “2024-06-30”
+    p_value_avg_palma <- t.test(palma_prepared_1, palma_prepared_2, alternative = "two.sided")$p.value
+    conf_int_avg_palma <- t.test(palma_prepared_1, palma_prepared_2, alternative = "two.sided")$conf.int
+    print(avg_palma_1)
+    print(avg_palma_2)
+    print(diff_avg_palma)
+    # Paso 4: Hacer un boxplot
+    boxplot(palma_prepared_1, palma_prepared_2, names = c("2023-12-17", "2024-06-30"), col = c("blue", "red"), main = "Precios medios de Palma en 2023-12-17 y 2024-06-30", ylab = "Precio (€)", xlab = "Fecha")
+    ```
 
 # 05 - Proporción e Intervalo de Confianza 2024
 
@@ -287,11 +370,11 @@ En esta sección se analiza la proporción de apartamentos con una valoración p
 
 ```{r question_5}
 # Filtrar los datos para el periodo "2024-03-23" y los municipios deseados
-rating_Pollenca= listings_common0_select %>%
+rating_Pollenca= airbnb_data$listings %>%
   filter(neighbourhood_cleansed=="Pollença" & date=="2024-03-23")
 rating_Pollenca=na.omit(rating_Pollenca$review_scores_rating)
 
-rating_Palma= listings_common0_select %>%
+rating_Palma= airbnb_data$listings %>%
   filter(neighbourhood_cleansed=="Palma de Mallorca" & date=="2024-03-23")
 rating_Palma=na.omit(rating_Palma$review_scores_rating)
 
@@ -360,12 +443,12 @@ En esta sección se analiza la proporción de apartamentos con una valoración p
 library(dplyr)
 
 # Filtrar y combinar datos para Palma de Mallorca
-rating_2023M <- listings_common0_select %>%
+rating_2023M <- airbnb_data$listings %>%
   filter(neighbourhood_cleansed == "Palma de Mallorca" & date == "2023-12-17") %>%
   arrange(id) %>%
   select(id, review_scores_rating)
 
-rating_2024M <- listings_common0_select %>%
+rating_2024M <- airbnb_data$listings %>%
   filter(neighbourhood_cleansed == "Palma de Mallorca" & date == "2024-03-23") %>%
   arrange(id) %>%
   select(id, review_scores_rating)
@@ -374,12 +457,12 @@ rating_23_24_M <- rating_2023M %>%
   left_join(rating_2024M, by = "id", suffix = c("_2023", "_2024"))
 
 # Filtrar y combinar datos para Pollença
-rating_2023P <- listings_common0_select %>%
+rating_2023P <- airbnb_data$listings %>%
   filter(neighbourhood_cleansed == "Pollença" & date == "2023-12-17") %>%
   arrange(id) %>%
   select(id, review_scores_rating)
 
-rating_2024P <- listings_common0_select %>%
+rating_2024P <- airbnb_data$listings %>%
   filter(neighbourhood_cleansed == "Pollença" & date == "2024-03-23") %>%
   arrange(id) %>%
   select(id, review_scores_rating)
@@ -535,3 +618,7 @@ ggplot(length_freq, aes(x = log_rank, y = log_frequency)) +
   ) +
   theme_minimal()
 ```
+
+5. **Interpretaciò:**
+   - Un R cuadrado alto en la regresión log-log sugiere el cumplimiento de la ley de Zipf.
+   - Una pendiente cercana a -1 en la regresión log-log respalda aún más la ley de Zipf.
