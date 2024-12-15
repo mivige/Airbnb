@@ -1,6 +1,6 @@
 ---
 title: "Airbnb Mallorca Data Analysis"
-author: "Group [Your Team Name]"
+author: "Angus, Michele, Finn Dicke"
 date: "`r Sys.Date()`"
 output: 
   html_document:
@@ -108,10 +108,34 @@ validate_data <- function(data) {
 validate_data(airbnb_data)
 ```
 
-# 01 - 
+# 01 - Tabla Estadísticos Descriptivos
 
 ```{r question_1}
+# Cargar librerías necesarias
+library(dplyr)
+library(kableExtra)
 
+# Paso 1: Preparar los datos
+# Convertir las fechas a formato 'Year' y agrupar por municipio y año
+data_prepared <- listings_common0_select %>%
+  mutate(year = format(date, "%Y")) %>%  # Extraer el año de la columna 'date'
+  group_by(neighbourhood_cleansed, year)  # Agrupar por municipio y año
+
+# Paso 2: Calcular estadísticos descriptivos
+stats <- data_prepared %>%
+  summarise(
+    mean_price = mean(price, na.rm = TRUE),       # Media del precio
+    median_price = median(price, na.rm = TRUE),  # Mediana del precio
+    sd_price = sd(price, na.rm = TRUE),          # Desviación estándar del precio
+    mean_reviews = mean(number_of_reviews, na.rm = TRUE),       # Media de reseñas
+    median_reviews = median(number_of_reviews, na.rm = TRUE),  # Mediana de reseñas
+    sd_reviews = sd(number_of_reviews, na.rm = TRUE)           # Desviación estándar de reseñas
+  ) %>%
+  ungroup()
+
+stats %>%
+  kable("html", caption = "Estadísticos descriptivos por municipio y año") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 ```
 
 # 02 - Normality Assessment
@@ -211,16 +235,143 @@ print(plot_reviews_palma)
 
 ```
 
-# 05 - 
+# 05 - Proporción e Intervalo de Confianza 2024
+
+En esta sección se analiza la proporción de apartamentos con una valoración promedio (review_scores_rating) mayor que 4 en los municipios Palma de Mallorca y Pollença durante el periodo "2024-03-23". Este análisis examina las diferencias en las proporciones entre ambos municipios y construye un intervalo de confianza para determinar si estas diferencias son estadísticamente significativas.
+
+1. **Extracción de Datos:**
+   -Se filtran los anncios correspondientes a los municipos de **Palma de Mallorca** y **Pollença** para el periodo "2024-03-23".
+   -Se selecciona la columna (`review_scores_rating`) eliminando valores inexistentes (**Na**) con `na.omit`.
+   -Los datos resultantes se agrupan por municipio, permitiendo realizar cálculos independientes para cada uno.
+
+2. **Cálculo de Proporciones:**
+   - Se calcula la porporción de apartamentos con `review_scores_rating > 4` en cada municipio:
+      -**Proporción(p)**: número de apartamentos con `review_scores_rating > 4` dividido por el tamaño            total de la muestra.
+   - Tambiéns e calcula el tamaño de la muestra (n) para cada municipio.
+
+3. **Diferencias Proporcionales:**
+  - Se calcula la diferencia entre las proporciones de ambos municipios:
+    Diferencia= p_pollença - p_palma
+   
+
+4. **Intervalo de confianza:**
+   - Se calcula el error estándar para la diferencia de proporciones utilizando la fórmula: 
+   
+    $$ \text{Error estándar} = \sqrt{\frac{p_{\text{Pollença}}(1 - p_{\text{Pollença}})}{n_{\text{Pollença}}} + \frac{p_{\text{Palma}}(1 - p_{\text{Palma}})}{n_{\text{Palma}}}}$$
+    
+  -Se consruye un intervalo de confianza al 95%:
+      $$IC = Diferencia \pm z* ErrorEstándar$$
 
 ```{r question_5}
+# Filtrar los datos para el periodo "2024-03-23" y los municipios deseados
+rating_Pollenca= listings_common0_select %>%
+  filter(neighbourhood_cleansed=="Pollença" & date=="2024-03-23")
+rating_Pollenca=na.omit(rating_Pollenca$review_scores_rating)
 
+rating_Palma= listings_common0_select %>%
+  filter(neighbourhood_cleansed=="Palma de Mallorca" & date=="2024-03-23")
+rating_Palma=na.omit(rating_Palma$review_scores_rating)
+
+# Calcular la proporción de apartamentos con 'review_scores_rating' > 4 por municipio
+
+#Pollenca
+p_Pollenca=mean(rating_Pollenca>4)
+n_Pollenca=length(rating_Pollenca)
+p_Pollenca
+n_Pollenca
+
+#Mallorca
+p_Mallorca=mean(rating_Palma>4)
+n_Mallorca=length(rating_Palma)
+p_Mallorca
+n_Mallorca
+
+# Calcular la diferencia de proporciones
+diferencia <- p_Pollenca - p_Mallorca
+
+# Calcular el error estándar
+error <- sqrt((p_Pollenca * (1 - p_Pollenca) / n_Pollenca) + (p_Mallorca * (1 - p_Mallorca) / n_Mallorca))
+
+# Valor crítico para un intervalo de confianza del 95%
+z <- qnorm(0.975)
+
+# Intervalo de confianza
+intervalo <- c(diferencia - z * error, diferencia + z * error)
+
+# Resultados finales
+list(
+  Diferencia = diferencia,
+  IC_95 = intervalo,
+  Palma_Proporción = p_Mallorca,
+  Pollença_Proporción = p_Pollenca
+)
 ```
 
-# 06 - 
+5. **Conclusión:**
+  -Proporciones observadas: la proporción de apartamentos es mayor en **Palma de Mallorca** que en **Pollença**
+  -Este resultado sugiere que los apartamentos en **Palma de Mallorca** tienen una valoración promedio significativamente mejor que los de **Pollença**, lo que podría reflejar diferencias en la calidad de los servicios o en las experiencias de los huéspedes.
+
+# 06 - Proporción e Intervalo de Confianza 2023 y 2024
 
 ```{r question_6}
+library(dplyr)
 
+# Filtrar y combinar datos para Palma de Mallorca
+rating_2023M <- listings_common0_select %>%
+  filter(neighbourhood_cleansed == "Palma de Mallorca" & date == "2023-12-17") %>%
+  arrange(id) %>%
+  select(id, review_scores_rating)
+
+rating_2024M <- listings_common0_select %>%
+  filter(neighbourhood_cleansed == "Palma de Mallorca" & date == "2024-03-23") %>%
+  arrange(id) %>%
+  select(id, review_scores_rating)
+
+rating_23_24_M <- rating_2023M %>%
+  left_join(rating_2024M, by = "id", suffix = c("_2023", "_2024"))
+
+# Filtrar y combinar datos para Pollença
+rating_2023P <- listings_common0_select %>%
+  filter(neighbourhood_cleansed == "Pollença" & date == "2023-12-17") %>%
+  arrange(id) %>%
+  select(id, review_scores_rating)
+
+rating_2024P <- listings_common0_select %>%
+  filter(neighbourhood_cleansed == "Pollença" & date == "2024-03-23") %>%
+  arrange(id) %>%
+  select(id, review_scores_rating)
+
+rating_23_24_P <- rating_2023P %>%
+  left_join(rating_2024P, by = "id", suffix = c("_2023", "_2024"))
+
+# Calcular proporciones para Pollença
+p_Pollenca <- mean(rating_23_24_P$review_scores_rating_2023 > 4, na.rm = TRUE)
+n_Pollenca <- sum(!is.na(rating_23_24_P$review_scores_rating_2023))
+
+# Calcular proporciones para Palma de Mallorca
+p_Mallorca <- mean(rating_23_24_M$review_scores_rating_2023 > 4, na.rm = TRUE)
+n_Mallorca <- sum(!is.na(rating_23_24_M$review_scores_rating_2023))
+
+# Calcular diferencia de proporciones
+diferencia <- p_Pollenca - p_Mallorca
+
+# Calcular el error estándar
+error <- sqrt((p_Pollenca * (1 - p_Pollenca) / n_Pollenca) +
+                (p_Mallorca * (1 - p_Mallorca) / n_Mallorca))
+
+# Valor crítico para un intervalo de confianza del 95%
+z <- qnorm(0.975)
+
+# Calcular intervalo de confianza
+intervalo <- c(diferencia - z * error, diferencia + z * error)
+
+# Resultados finales
+list(
+  Diferencia = diferencia,
+  IC_95 = intervalo,
+  Palma_Proporción = p_Mallorca,
+  Pollença_Proporción = p_Pollenca
+)
 ```
 
 # 07 - Zipf's Law
