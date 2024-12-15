@@ -2,7 +2,9 @@
 title: "Airbnb Mallorca Data Analysis"
 author: "Angus, Michele, Finn Dicke"
 date: "`r Sys.Date()`"
-output: 
+output:
+  pdf_document:
+    toc: true
   html_document:
     toc: true
     toc_float: true
@@ -110,6 +112,20 @@ validate_data(airbnb_data)
 
 # 01 - Tabla Estadísticos Descriptivos
 
+El objetivo del análisis es calcular los estadísticos descriptivos de las variables *price* y *number_of_reviews* para los apartamentos de alquiler en los municipios de Mallorca, desglosados por año.
+
+1. **Preparación de los Datos:**
+  -Se extrae el año de la columna date y se agrega como una nueva variable year.
+  -Los datos se agrupan por municipio (neighbourhood_cleansed) y año (year) para calcular las estadísticas dentro de cada grupo.
+
+2. **Cálculo de Estadísticos:**
+  -Se calculan las siguientes métricas para cada municipio y año:
+  -Media, mediana y desviación estándar de (`price`).
+  -Media, mediana y desviación estándar de (`number_of_reviews`).
+  
+3. **Presentación de Resultados:**
+  -Los resultados se organizan en una tabla clara utilizando la librería kableExtra, que permite un formato interactivo y estilizado.
+
 ```{r question_1}
 # Cargar librerías necesarias
 library(dplyr)
@@ -137,6 +153,13 @@ stats %>%
   kable("html", caption = "Estadísticos descriptivos por municipio y año") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 ```
+
+4. **Conclusión:**
+
+Este análisis revela diferencias significativas en los precios y la actividad turística entre los municipios y a lo largo del tiempo. Estos resultados son útiles para identificar tendencias clave en el mercado de alquiler vacacional en Mallorca. Por ejemplo:
+
+  -Incrementos en Precios: Municipios como Andratx muestran una tendencia de aumento en los precios, lo que podría estar asociado con mayor   demanda o mejoras en las propiedades.
+  -Actividad Turística: Palma de Mallorca lidera en número de reseñas, lo que destaca su posición como destino popular.
 
 # 02 - Normality Assessment
 
@@ -311,7 +334,27 @@ list(
   -Proporciones observadas: la proporción de apartamentos es mayor en **Palma de Mallorca** que en **Pollença**
   -Este resultado sugiere que los apartamentos en **Palma de Mallorca** tienen una valoración promedio significativamente mejor que los de **Pollença**, lo que podría reflejar diferencias en la calidad de los servicios o en las experiencias de los huéspedes.
 
+
 # 06 - Proporción e Intervalo de Confianza 2023 y 2024
+
+En esta sección se analiza la proporción de apartamentos con una valoración promedio (review_scores_rating) mayor que 4 en los municipios Palma de Mallorca y Pollença durante los periodos “2023-12-17” y "2024-03-23" . Este análisis examina las diferencias en las proporciones entre ambos municipios y construye un intervalo de confianza para determinar si estas diferencias son estadísticamente significativas.
+
+1. **Filtrado de Datos:** 
+-Se seleccionan los registros correspondientes a Palma de Mallorca y Pollença para las fechas especificadas (“2023-12-17” y “2024-03-23”), manteniendo las columnas id y review_scores_rating.
+
+2. **Unión de Datos:**
+-Se combinan los datos de cada municipio entre las dos fechas mediante un left_join en la columna id, lo que permite comparar las valoraciones entre ambas fechas para los mismos apartamentos.
+
+3.**Cálculo de Proporciones:**
+-Se calcula la proporción de apartamentos con valoraciones mayores a 4 para cada municipio en la fecha “2023-12-17”.
+-Se calcula el número total de observaciones válidas para cada municipio.
+-Diferencia de Proporciones: Se obtiene la diferencia entre las proporciones de ambos municipios.
+
+4.**Error Estándar e Intervalo de Confianza:**
+
+-Se calcula el error estándar para la diferencia de proporciones.
+-Se utiliza un valor crítico de la distribución normal estándar (z = 1.96 para un 95% de confianza) para construir el intervalo de confianza.
+-Resultados: Se presentan la diferencia de proporciones, el intervalo de confianza, y las proporciones individuales para cada municipio (`list()`).
 
 ```{r question_6}
 library(dplyr)
@@ -373,6 +416,12 @@ list(
   Pollença_Proporción = p_Pollenca
 )
 ```
+
+5. **Conclusión:**
+  Diferencia de proporciones: 
+  −Sugiere que Palma tiene una mayor proporción de apartamentos altamente valorados.
+  -Intervalo de confianza (95%): __[−0.0818,−0.0416]__, que no incluye el valor 0, indicando que la diferencia es estadísticamente significativa.
+Esto sugiere que los apartamentos en Palma de Mallorca tienen, en promedio, una mayor proporción de valoraciones altas en comparación con Pollença durante las fechas analizadas. 
 
 # 07 - Zipf's Law
 
