@@ -1,5 +1,4 @@
 
-
 # Question 2
 
 ### Explanation:
