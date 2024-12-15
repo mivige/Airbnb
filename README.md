@@ -5,7 +5,7 @@ This project conducts a comprehensive statistical analysis of Airbnb listings in
 
 ## Team Members
 - Member 1: mivige
-- Member 2: [Name]
+- Member 2: AngPelegrin
 - Member 3: [Name]
 
 ## Project Objectives

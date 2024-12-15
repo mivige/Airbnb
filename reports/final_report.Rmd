@@ -1,25 +1,29 @@
 ---
 title: "Airbnb Mallorca Data Analysis"
-author: "Group [Your Team Name]"
+author: "Angus, Michele, Finn Dicke"
 date: "`r Sys.Date()`"
-output: 
+output:
   html_document:
     toc: true
     toc_float: true
     code_folding: hide
     theme: united
+  pdf_document:
+    toc: true
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
-# Load required libraries and scripts
+# Load required libraries
 library(tidyverse)
-library(kableExtra)
+#library(kableExtra)
 library(sf)
+library(ggplot2)
+library(tmap)
+library(stringr)
 
-# Source all analysis scripts
-source("../R/01_data_loading.R")
-source("../R/02_descriptive_stats.R")
-source("../R/03_normality_test.R")
 
 # Set global chunk options
 knitr::opts_chunk$set(
@@ -31,48 +35,723 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Introduction
+# Data Loading
 
-## Project Overview
-This report analyzes Airbnb listings in Mallorca across four different time periods.
+En esta sección se realiza la carga de los datos necesarios para el
+análisis del proyecto. El proceso incluye la lectura de diversos
+conjuntos de datos, así como la validación básica de la integridad de
+los mismos.
 
-## Data Sources
-- Platform: Inside Airbnb
-- Periods: 2023-12-17, 2024-03-23, 2024-06-19, 2024-09-13
+1.  **Carga de Datos:**
+    -   Se cargan datos de anuncios (`listings_common0_select`)
+        almacenados en un archivo `.RData`, los cuales contienen
+        información clave sobre los anuncios de Airbnb en Mallorca.
+    -   Se leen las reseñas de los usuarios desde un archivo CSV
+        comprimido (`reviews.csv.gz`), lo cual incluye datos sobre
+        comentarios y fechas asociados a los anuncios.
+    -   Se importan los datos de municipios desde otro archivo CSV
+        (`neighbourhoods.csv`) y se cargan las geometrías
+        correspondientes a los barrios desde un archivo GeoJSON para su
+        visualización geoespacial.
+2.  **Validación de Datos:**
+    -   Se asegura que los datos cargados cumplan con criterios mínimos
+        de calidad, como la existencia de los conjuntos necesarios y la
+        presencia de columnas clave en los datos de anuncios.
+    -   Se proporciona un resumen básico del número de registros
+        cargados en cada conjunto de datos para garantizar que el
+        proceso de carga se completó correctamente.
 
-# Descriptive Statistics
+Este proceso establece la base para los análisis posteriores, asegurando
+que los datos sean consistentes, completos y listos para su exploración
+y modelado.
 
-## Price and Reviews by Municipality
+```{r data_loading}
+# Function to load and preprocess data
+load_airbnb_data <- function() {
+    # Load listings data
+    load("../clean_data/mallorca/listing_common0_select.RData")
+    ls()
 
-```{r descriptive_stats}
-# Display descriptive statistics tables
-price_stats %>% 
-  kable("html") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"))
+    str(listings_common0_select)
 
-reviews_stats %>% 
-  kable("html") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"))
+    unique(listings_common0_select$date)
+    
+    # Read reviews data
+    reviews = read_csv("../data/mallorca/2023-12-17/reviews.csv.gz")
+    str(reviews)
+
+    head(reviews)
+    
+    # Read neighbourhoods
+    municipios = read_csv("../data/mallorca/2023-12-17/neighbourhoods.csv")
+    str(municipios)
+    
+    head(municipios)
+
+    # Leer el archivo GeoJSON
+    geojson_sf <- sf::st_read("../data/mallorca/2024-09-13/neighbourhoods.geojson")
+
+    # Crear un mapa
+
+    # interactivo
+    tmap_mode("plot") # Cambiar a modo  view/plot   que es interactivo/estático
+    tm_shape(geojson_sf) + tm_polygons(col = "cyan", alpha = 0.6) + tm_layout(title = "Mapa - GeoJSON Mallorca con municipios")
+
+    # Return list of processed datasets
+    list(
+        listings = listings_common0_select,
+        reviews = reviews,
+        municipios = municipios
+    )
+}
+
+# Load and preprocess data
+airbnb_data <- load_airbnb_data()
+
+# Data validation
+validate_data <- function(data) {
+    # Add checks for data integrity
+    stopifnot(
+        "Listings data is missing" = !is.null(data$listings),
+        "Reviews data is missing" = !is.null(data$reviews),
+        "Listings have required columns" = all(c("id", "price", "neighbourhood_cleansed", "date") %in% colnames(data$listings))
+    )
+    
+    # Print basic data summary
+    print("Data Loading Summary:")
+    print(paste("Listings records:", nrow(data$listings)))
+    print(paste("Reviews records:", nrow(data$reviews)))
+    print(paste("Municipalities:", nrow(data$municipios)))
+}
+
+# Validate loaded data
+validate_data(airbnb_data)
 ```
 
-# Normality Assessment
+# 01 - Tabla Estadísticos Descriptivos
+
+El objetivo del análisis es calcular los estadísticos descriptivos de
+las variables *price* y *number_of_reviews* para los apartamentos de
+alquiler en los municipios de Mallorca, desglosados por año.
+
+1.  **Preparación de los Datos:** -Se extrae el año de la columna date y
+    se agrega como una nueva variable year. -Los datos se agrupan por
+    municipio (neighbourhood_cleansed) y año (year) para calcular las
+    estadísticas dentro de cada grupo.
+
+2.  **Cálculo de Estadísticos:** -Se calculan las siguientes métricas
+    para cada municipio y año: -Media, mediana y desviación estándar de
+    (`price`). -Media, mediana y desviación estándar de
+    (`number_of_reviews`).
+
+3.  **Presentación de Resultados:** -Los resultados se organizan en una
+    tabla clara utilizando la librería kableExtra, que permite un
+    formato interactivo y estilizado.
+
+```{r question_1}
+# Cargar librerías necesarias
+library(dplyr)
+library(kableExtra)
+
+# Paso 1: Preparar los datos
+# Convertir las fechas a formato 'Year' y agrupar por municipio y año
+data_prepared <- listings_common0_select %>%
+  mutate(year = format(date, "%Y")) %>%  # Extraer el año de la columna 'date'
+  group_by(neighbourhood_cleansed, year)  # Agrupar por municipio y año
+
+# Paso 2: Calcular estadísticos descriptivos
+stats <- data_prepared %>%
+  summarise(
+    mean_price = mean(price, na.rm = TRUE),       # Media del precio
+    median_price = median(price, na.rm = TRUE),  # Mediana del precio
+    sd_price = sd(price, na.rm = TRUE),          # Desviación estándar del precio
+    mean_reviews = mean(number_of_reviews, na.rm = TRUE),       # Media de reseñas
+    median_reviews = median(number_of_reviews, na.rm = TRUE),  # Mediana de reseñas
+    sd_reviews = sd(number_of_reviews, na.rm = TRUE)           # Desviación estándar de reseñas
+  ) %>%
+  ungroup()
+
+stats %>%
+  kable("html", caption = "Estadísticos descriptivos por municipio y año") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+4.  **Conclusión:**
+
+Este análisis revela diferencias significativas en los precios y la
+actividad turística entre los municipios y a lo largo del tiempo. Estos
+resultados son útiles para identificar tendencias clave en el mercado de
+alquiler vacacional en Mallorca. Por ejemplo:
+
+-Incrementos en Precios: Municipios como Andratx muestran una tendencia
+de aumento en los precios, lo que podría estar asociado con mayor
+demanda o mejoras en las propiedades. -Actividad Turística: Palma de
+Mallorca lidera en número de reseñas, lo que destaca su posición como
+destino popular.
+
+# 02 - Normality Assessment
+
+En esta sección se realiza un análisis de normalidad sobre variables
+clave (`price` y `number_of_reviews`) para dos ubicaciones específicas:
+**Pollença** y **Palma de Mallorca**. Este análisis incluye la
+filtración de datos relevantes y la visualización de las distribuciones
+de las variables seleccionadas.
+
+1.  **Filtración de Datos:**
+    -   Se seleccionan datos correspondientes al **13 de septiembre de
+        2024**.
+    -   Se filtran ubicaciones específicas: **Pollença** y **Palma de
+        Mallorca**.
+    -   Se limita el rango de precios a valores razonables entre 50 y
+        400 euros, para excluir outliers extremos.
+2.  **Función para Visualización de Distribuciones:**
+    -   Se define una función genérica, `plot_distribution`, que
+        permite:
+        -   Graficar histogramas de frecuencias con densidad de núcleo
+            superpuesta.
+        -   Añadir una curva de densidad normal utilizando la media y
+            desviación estándar de los datos.
+    -   Los gráficos permiten comparar las distribuciones empíricas de
+        los datos con una distribución normal teórica.
+3.  **Análisis y Visualización:**
+    -   Se generan gráficos separados para cada combinación de variable
+        (`price` y `number_of_reviews`) y ubicación (**Pollença** y
+        **Palma de Mallorca**):
+        -   **Pollença:**
+            -   Distribución de precios (`price`).
+            -   Número de reseñas (`number_of_reviews`).
+        -   **Palma de Mallorca:**
+            -   Distribución de precios (`price`).
+            -   Número de reseñas (`number_of_reviews`).
+    -   Cada gráfico incluye:
+        -   Histograma con densidad empírica.
+        -   Densidad de núcleo en rojo.
+        -   Curva de densidad normal en azul (línea discontinua).
+4.  **Conclusiones Visuales:**
+    -   Estos gráficos permiten evaluar visualmente si las
+        distribuciones de las variables clave se aproximan a una
+        distribución normal, lo cual es relevante para determinar los
+        métodos estadísticos aplicables en análisis posteriores.
+
+Este análisis es una etapa crucial para comprender la naturaleza de los
+datos y elegir enfoques estadísticos adecuados para las siguientes fases
+del proyecto.
 
 ```{r normality_assessment}
-# Perform normality tests for Palma and Pollença
-palma_price_normality <- assess_normality(airbnb_data$listings, "Palma de Mallorca", "price")
-pollenca_price_normality <- assess_normality(airbnb_data$listings, "Pollença", "price")
+# Filter data for the specified date and locations
+data_filtered <- airbnb_data$listings %>%
+  filter(
+    date == as.Date("2024-09-13"),
+    neighbourhood_cleansed %in% c("Pollença", "Palma de Mallorca"),
+    price > 50 & price < 400 # Filter for valid price range
+  )
 
-# Display normality test results and plots
-print(palma_price_normality$shapiro_test)
-print(pollenca_price_normality$shapiro_test)
+# Function to plot distribution with histogram, kernel density, and normal density
+plot_distribution <- function(data, variable, location) {
+  # Extract the data for the given variable and location
+  data_subset <- data %>% filter(neighbourhood_cleansed == location)
+  values <- data_subset[[variable]]
 
-# Plots
-palma_price_normality$qq_plot
-palma_price_normality$density_plot
-pollenca_price_normality$qq_plot
-pollenca_price_normality$density_plot
+  # Calculate mean and standard deviation
+  mean_val <- mean(values, na.rm = TRUE)
+  sd_val <- sd(values, na.rm = TRUE)
+
+  # Create the plot
+  ggplot(data_subset, aes_string(x = variable)) +
+    geom_histogram(aes(y = ..density..), bins = 30, fill = "skyblue", alpha = 0.6) +
+    geom_density(color = "red", size = 1) +
+    stat_function(fun = dnorm, args = list(mean = mean_val, sd = sd_val), color = "blue", linetype = "dashed", size = 1) +
+    labs(
+      title = paste("Distribution of", variable, "in", location),
+      x = variable,
+      y = "Density"
+    ) +
+    theme_minimal()
+}
+
+# Plot for `price` in Pollença
+plot_price_pollenca <- plot_distribution(data_filtered, "price", "Pollença")
+
+# Plot for `price` in Palma
+plot_price_palma <- plot_distribution(data_filtered, "price", "Palma de Mallorca")
+
+# Plot for `number_of_reviews` in Pollença
+plot_reviews_pollenca <- plot_distribution(data_filtered, "number_of_reviews", "Pollença")
+
+# Plot for `number_of_reviews` in Palma
+plot_reviews_palma <- plot_distribution(data_filtered, "number_of_reviews", "Palma de Mallorca")
+
+# Display the plots
+print(plot_price_pollenca)
+print(plot_price_palma)
+print(plot_reviews_pollenca)
+print(plot_reviews_palma)
+
 ```
 
-# Conclusion
+# 03 - Comparison & hypothesis testing
 
-[To be completed with final analysis findings]
+En este apartado se compara el precio medio de los alojamientos en los
+municipios de Palma y Pollensa, y se realiza un contraste de hipótesis
+para determinar si existe una diferencia significativa entre los precios
+medios de ambos municipios.
+
+1.  **Preparación de los Datos:**
+
+    -   Se filtran los datos de precios de los alojamientos en Palma y
+        Pollensa, limitando el rango de precios entre 50 y 400 euros.
+    -   Se calcula el precio medio de los alojamientos en cada
+        municipio.
+
+2.  **Comparación de Datos:**
+
+    -   Se calcula la diferencia entre los precios medios de Palma y
+        Pollensa.
+
+3.  **Contraste de Hipótesis:**
+
+    -   Se plantea la hipótesis nula y alternativa para el contraste.
+    -   Se calcula el p-valor y el intervalo de confianza asociado al
+        contraste.
+
+4.  **Conclusión**
+
+    ```{r question_3}
+    # Paso 1: Guardar los datos de precios de palma y pollensa entre 50 y 400euros en dos objetos
+    palma_prepared <- listings_common0_select %>% 
+      filter(city == "Palma" & price >= 50 & price <= 400) %>% 
+      pull(price)
+
+    precio_medio_palma <- mean(palma_prepared)#precio medio de palma
+
+    pollensa_prepared <- listings_common0_select %>%
+      filter(city == "Pollensa" & price >= 50 & price <= 400) %>% 
+      pull(price)
+
+    precio_medio_pollensa <- mean(pollensa_prepared)#precio medio de pollensa
+
+    # Paso 2: Comparar los datos
+      diff_precio = precio_medio_palma - precio_medio_pollensa
+      
+    # Paso 3: Construid la hipótesis nula y alternativa,
+    # calculad el p-valor y el intervalo de confiaza asociado al contraste
+      
+    # H0: No hay diferencia entre los precios medios de Palma y Pollensa
+    # H1: Hay diferencia entre los precios medios de Palma y Pollensa
+      
+    p_value <- t.test(palma_prepared, pollensa_prepared, alternative = "two.sided")$p.value
+    conf_int <- t.test(palma_prepared, pollensa_prepared, alternative = "two.sided")$conf.int
+
+    # Paso 4: Justifica tecnicamente la conclusión del contraste.
+
+    # Si el p-valor es menor que el nivel de significancia (0.05), rechazamos la hipótesis nula.
+    # En este caso, el p-valor es menor que 0.05, por lo que rechazamos la hipótesis nula.
+    # Por lo tanto, hay una diferencia significativa entre los precios medios de Palma y Pollensa.
+
+    # Paso 5: Presentar los resultados de forma clara y concisa
+
+    kable(data.frame(precio_medio_palma, precio_medio_pollensa, diff_precio, p_value, conf_int), 
+          col.names = c("Precio medio Palma", "Precio medio Pollensa", "Diferencia de precios", "P-valor", "Intervalo de confianza"), 
+          align = "c") %>%
+      kable_styling(full_width = F)
+    ```
+
+# 04 - Comparación de intervalos, hipotesis y boxplot
+
+En este apartado se contrastan los precios medios de los alojamientos en
+Palma entre dos periodos específicos: **17 de diciembre de 2023** y **30
+de junio de 2024**. Se realiza un contraste de hipótesis para determinar
+si existe una diferencia significativa entre los precios medios en estos
+dos periodos.
+
+1.  **Preparación de los Datos:**
+
+    -   Se filtran los datos de precios de los alojamientos en Palma
+        para los periodos especificados.
+    -   Se calcula el precio medio de los alojamientos en cada periodo.
+
+2.  **Comparación de Datos:**
+
+    -   Se calcula la diferencia entre los precios medios de Palma en
+        ambos periodos.
+
+3.  **Contraste de Hipótesis:**
+
+    -   Se plantea la hipótesis nula y alternativa para el contraste.
+    -   Se calcula el p-valor y el intervalo de confianza asociado al
+        contraste.
+
+4.  **Boxplot:**
+
+    -   Se genera un gráfico de caja (*boxplot*) para visualizar la
+        distribución de los precios en Palma en los dos periodos
+        comparados.
+
+    ```{r question_4}
+    # Pregunta 1: Contrastar si las medias de los precios en Palma entre los periodos “2023-12-17” y “2024-03-23” son iguales.
+    # Paso 1: Preparar los datos
+
+    palma_prepared_1 <- listings_common0_select %>% #Guarda precios palma 2023-12-17
+      filter(city == "Palma" & date == "2023-12-17") %>% 
+      pull(price)
+
+    avg_palma_1 <- mean(palma_prepared_1) #precio medio de palma 2023-12-17
+
+    palma_prepared_2 <- listings_common0_select %>% #Guarda precios palma 2024-06-30
+      filter(city == "Palma" & date == "2024-06-30") %>% 
+      pull(price)
+
+    avg_palma_2 <- mean(palma_prepared_2) #precio medio de palma 2024-06-30
+
+    # Paso 2: Comparar las medias
+    diff_avg_palma <- avg_palma_1 - avg_palma_2
+
+    # Paso 3: Construir la hipótesis nula y alternativa, calcular el p-valor y el intervalo de confianza asociado al contraste
+
+    # H0: No hay diferencia entre los precios medios de Palma en los periodos “2023-12-17” y “2024-06-30”
+    # H1: Hay diferencia entre los precios medios de Palma en los periodos “2023-12-17” y “2024-06-30”
+
+    p_value_avg_palma <- t.test(palma_prepared_1, palma_prepared_2, alternative = "two.sided")$p.value
+    conf_int_avg_palma <- t.test(palma_prepared_1, palma_prepared_2, alternative = "two.sided")$conf.int
+
+    print(avg_palma_1)
+    print(avg_palma_2)
+    print(diff_avg_palma)
+
+    # Paso 4: Hacer un boxplot
+    boxplot(palma_prepared_1, palma_prepared_2, names = c("2023-12-17", "2024-06-30"), col = c("blue", "red"), main = "Precios medios de Palma en 2023-12-17 y 2024-06-30", ylab = "Precio (€)", xlab = "Fecha")
+    ```
+
+# 05 - Proporción e Intervalo de Confianza 2024
+
+En esta sección se analiza la proporción de apartamentos con una
+valoración promedio (review_scores_rating) mayor que 4 en los municipios
+Palma de Mallorca y Pollença durante el periodo "2024-03-23". Este
+análisis examina las diferencias en las proporciones entre ambos
+municipios y construye un intervalo de confianza para determinar si
+estas diferencias son estadísticamente significativas.
+
+1.  **Extracción de Datos:** -Se filtran los anncios correspondientes a
+    los municipos de **Palma de Mallorca** y **Pollença** para el
+    periodo "2024-03-23". -Se selecciona la columna
+    (`review_scores_rating`) eliminando valores inexistentes (**Na**)
+    con `na.omit`. -Los datos resultantes se agrupan por municipio,
+    permitiendo realizar cálculos independientes para cada uno.
+
+2.  **Cálculo de Proporciones:**
+
+    -   Se calcula la porporción de apartamentos con
+        `review_scores_rating > 4` en cada municipio:
+        -**Proporción(p)**: número de apartamentos con
+        `review_scores_rating > 4` dividido por el tamaño total de la
+        muestra.
+    -   Tambiéns e calcula el tamaño de la muestra (n) para cada
+        municipio.
+
+3.  **Diferencias Proporcionales:**
+
+-   Se calcula la diferencia entre las proporciones de ambos municipios:
+    Diferencia= p_pollença - p_palma
+
+4.  **Intervalo de confianza:**
+
+    -   Se calcula el error estándar para la diferencia de proporciones
+        utilizando la fórmula:
+
+    $$ \text{Error estándar} = \sqrt{\frac{p_{\text{Pollença}}(1 - p_{\text{Pollença}})}{n_{\text{Pollença}}} + \frac{p_{\text{Palma}}(1 - p_{\text{Palma}})}{n_{\text{Palma}}}}$$
+
+-Se consruye un intervalo de confianza al 95%:
+$$IC = Diferencia \pm z* ErrorEstándar$$
+
+```{r question_5}
+# Filtrar los datos para el periodo "2024-03-23" y los municipios deseados
+rating_Pollenca= listings_common0_select %>%
+  filter(neighbourhood_cleansed=="Pollença" & date=="2024-03-23")
+rating_Pollenca=na.omit(rating_Pollenca$review_scores_rating)
+
+rating_Palma= listings_common0_select %>%
+  filter(neighbourhood_cleansed=="Palma de Mallorca" & date=="2024-03-23")
+rating_Palma=na.omit(rating_Palma$review_scores_rating)
+
+# Calcular la proporción de apartamentos con 'review_scores_rating' > 4 por municipio
+
+#Pollenca
+p_Pollenca=mean(rating_Pollenca>4)
+n_Pollenca=length(rating_Pollenca)
+p_Pollenca
+n_Pollenca
+
+#Mallorca
+p_Mallorca=mean(rating_Palma>4)
+n_Mallorca=length(rating_Palma)
+p_Mallorca
+n_Mallorca
+
+# Calcular la diferencia de proporciones
+diferencia <- p_Pollenca - p_Mallorca
+
+# Calcular el error estándar
+error <- sqrt((p_Pollenca * (1 - p_Pollenca) / n_Pollenca) + (p_Mallorca * (1 - p_Mallorca) / n_Mallorca))
+
+# Valor crítico para un intervalo de confianza del 95%
+z <- qnorm(0.975)
+
+# Intervalo de confianza
+intervalo <- c(diferencia - z * error, diferencia + z * error)
+
+# Resultados finales
+list(
+  Diferencia = diferencia,
+  IC_95 = intervalo,
+  Palma_Proporción = p_Mallorca,
+  Pollença_Proporción = p_Pollenca
+)
+```
+
+5.  **Conclusión:** -Proporciones observadas: la proporción de
+    apartamentos es mayor en **Palma de Mallorca** que en **Pollença**
+    -Este resultado sugiere que los apartamentos en **Palma de
+    Mallorca** tienen una valoración promedio significativamente mejor
+    que los de **Pollença**, lo que podría reflejar diferencias en la
+    calidad de los servicios o en las experiencias de los huéspedes.
+
+# 06 - Proporción e Intervalo de Confianza 2023 y 2024
+
+En esta sección se analiza la proporción de apartamentos con una
+valoración promedio (review_scores_rating) mayor que 4 en los municipios
+Palma de Mallorca y Pollença durante los periodos “2023-12-17” y
+"2024-03-23" . Este análisis examina las diferencias en las proporciones
+entre ambos municipios y construye un intervalo de confianza para
+determinar si estas diferencias son estadísticamente significativas.
+
+1.  **Filtrado de Datos:** -Se seleccionan los registros
+    correspondientes a Palma de Mallorca y Pollença para las fechas
+    especificadas (“2023-12-17” y “2024-03-23”), manteniendo las
+    columnas id y review_scores_rating.
+
+2.  **Unión de Datos:** -Se combinan los datos de cada municipio entre
+    las dos fechas mediante un left_join en la columna id, lo que
+    permite comparar las valoraciones entre ambas fechas para los mismos
+    apartamentos.
+
+3.**Cálculo de Proporciones:** -Se calcula la proporción de apartamentos
+con valoraciones mayores a 4 para cada municipio en la fecha
+“2023-12-17”. -Se calcula el número total de observaciones válidas para
+cada municipio. -Diferencia de Proporciones: Se obtiene la diferencia
+entre las proporciones de ambos municipios.
+
+4.**Error Estándar e Intervalo de Confianza:**
+
+-Se calcula el error estándar para la diferencia de proporciones. -Se
+utiliza un valor crítico de la distribución normal estándar (z = 1.96
+para un 95% de confianza) para construir el intervalo de confianza.
+-Resultados: Se presentan la diferencia de proporciones, el intervalo de
+confianza, y las proporciones individuales para cada municipio
+(`list()`).
+
+```{r question_6}
+library(dplyr)
+
+# Filtrar y combinar datos para Palma de Mallorca
+rating_2023M <- listings_common0_select %>%
+  filter(neighbourhood_cleansed == "Palma de Mallorca" & date == "2023-12-17") %>%
+  arrange(id) %>%
+  select(id, review_scores_rating)
+
+rating_2024M <- listings_common0_select %>%
+  filter(neighbourhood_cleansed == "Palma de Mallorca" & date == "2024-03-23") %>%
+  arrange(id) %>%
+  select(id, review_scores_rating)
+
+rating_23_24_M <- rating_2023M %>%
+  left_join(rating_2024M, by = "id", suffix = c("_2023", "_2024"))
+
+# Filtrar y combinar datos para Pollença
+rating_2023P <- listings_common0_select %>%
+  filter(neighbourhood_cleansed == "Pollença" & date == "2023-12-17") %>%
+  arrange(id) %>%
+  select(id, review_scores_rating)
+
+rating_2024P <- listings_common0_select %>%
+  filter(neighbourhood_cleansed == "Pollença" & date == "2024-03-23") %>%
+  arrange(id) %>%
+  select(id, review_scores_rating)
+
+rating_23_24_P <- rating_2023P %>%
+  left_join(rating_2024P, by = "id", suffix = c("_2023", "_2024"))
+
+# Calcular proporciones para Pollença
+p_Pollenca <- mean(rating_23_24_P$review_scores_rating_2023 > 4, na.rm = TRUE)
+n_Pollenca <- sum(!is.na(rating_23_24_P$review_scores_rating_2023))
+
+# Calcular proporciones para Palma de Mallorca
+p_Mallorca <- mean(rating_23_24_M$review_scores_rating_2023 > 4, na.rm = TRUE)
+n_Mallorca <- sum(!is.na(rating_23_24_M$review_scores_rating_2023))
+
+# Calcular diferencia de proporciones
+diferencia <- p_Pollenca - p_Mallorca
+
+# Calcular el error estándar
+error <- sqrt((p_Pollenca * (1 - p_Pollenca) / n_Pollenca) +
+                (p_Mallorca * (1 - p_Mallorca) / n_Mallorca))
+
+# Valor crítico para un intervalo de confianza del 95%
+z <- qnorm(0.975)
+
+# Calcular intervalo de confianza
+intervalo <- c(diferencia - z * error, diferencia + z * error)
+
+# Resultados finales
+list(
+  Diferencia = diferencia,
+  IC_95 = intervalo,
+  Palma_Proporción = p_Mallorca,
+  Pollença_Proporción = p_Pollenca
+)
+```
+
+5.  **Conclusión:** Diferencia de proporciones: −Sugiere que Palma tiene
+    una mayor proporción de apartamentos altamente valorados. -Intervalo
+    de confianza (95%): **[−0.0818,−0.0416]**, que no incluye el valor
+    0, indicando que la diferencia es estadísticamente significativa.
+    Esto sugiere que los apartamentos en Palma de Mallorca tienen, en
+    promedio, una mayor proporción de valoraciones altas en comparación
+    con Pollença durante las fechas analizadas.
+
+# 07 - Zipf's Law
+
+En esta sección se analiza la Ley de Zipf aplicada a los comentarios de
+reseñas en **Palma de Mallorca**. Este análisis examina la relación
+entre la frecuencia de longitudes de comentarios y su rango, incluyendo
+transformaciones logarítmicas para verificar el cumplimiento de esta ley
+en el conjunto de datos.
+
+1.  **Extracción de Datos:**
+    -   Se filtran los **anuncios** correspondientes a **Palma de
+        Mallorca** para obtener sus identificadores (`id`).
+    -   Se seleccionan únicamente las reseñas asociadas a estos
+        anuncios.
+    -   Se calcula la longitud de cada comentario en palabras utilizando
+        la función `str_count`.
+2.  **Cálculo de Frecuencias:**
+    -   Se determina la frecuencia de cada longitud de comentario y se
+        organiza en orden descendente de frecuencia.
+    -   Se añaden las siguientes columnas:
+        -   **Rank:** Posición de cada longitud de comentario en función
+            de su frecuencia, con mayor frecuencia asignada al rango más
+            alto.
+        -   **Log(Frequency):** Transformación logarítmica de la
+            frecuencia.
+        -   **Log(Rank):** Transformación logarítmica del rango.
+    -   Se filtran los datos para analizar rangos entre 10 y 1000,
+        excluyendo outliers extremos.
+3.  **Regresiones Lineales:**
+    -   Se realizan tres regresiones lineales para explorar la relación
+        entre frecuencia y rango:
+        -   Frecuencia (`frequency`) vs. Rango (`rank`).
+        -   Frecuencia (`frequency`) vs. Logaritmo del rango
+            (`log(rank)`).
+        -   Logaritmo de la frecuencia (`log(frequency)`) vs. Logaritmo
+            del rango (`log(rank)`) — Esta es la más relevante para
+            evaluar la Ley de Zipf.
+    -   Se presentan los resúmenes de cada modelo, incluyendo
+        coeficientes y métricas de ajuste.
+4.  **Visualización de Resultados:**
+    -   Se generan tres gráficos para interpretar los datos y las
+        relaciones lineales:
+        -   **Frecuencia vs. Rango:** Puntos de datos con línea de
+            regresión.
+        -   **Frecuencia vs. Log(Rango):** Visualización
+            semi-logarítmica.
+        -   **Log(Frecuencia) vs. Log(Rango):** Gráfico log-log,
+            principal para la Ley de Zipf.
+    -   Cada gráfico incluye puntos de datos y líneas de ajuste
+        generadas por los modelos de regresión lineal.
+5.  **Conclusión:**
+    -   Este análisis permite evaluar si las longitudes de comentarios
+        de reseñas en Palma de Mallorca siguen un patrón consistente con
+        la Ley de Zipf.
+    -   Los gráficos log-log y los resultados de regresión proporcionan
+        evidencia visual y estadística sobre esta relación.
+
+El cumplimiento de la Ley de Zipf puede ser indicativo de patrones
+universales en los datos textuales, relevantes para estudios de
+lingüística, comportamiento y análisis de datos. Este análisis
+constituye una parte integral de la comprensión de las características
+subyacentes del conjunto de datos.
+
+```{r Zipfs_law}
+# Save all the listings in Palma
+palma_listing_ids <- airbnb_data$listings %>%
+  filter(neighbourhood_cleansed == "Palma de Mallorca") %>%
+  pull(id)  # Extract as a vector
+
+# Extract only the reviews for Palma
+palma_reviews <- airbnb_data$reviews %>%
+  filter(as.character(listing_id) %in% as.character(palma_listing_ids))
+
+# Calculate the length of each comment in words
+palma_reviews <- palma_reviews %>% 
+  mutate(comment_length = str_count(comments, "\\w+"))
+
+# Compute the frequency of each comment length
+length_freq <- palma_reviews %>% 
+  count(comment_length, name = "frequency") %>% 
+  arrange(desc(frequency))
+
+# Add rank and log transformations for Zipf's analysis
+length_freq <- length_freq %>% 
+  mutate(
+    rank = rank(-frequency, ties.method = "first"), # Rank by descending frequency
+    log_frequency = log(frequency),
+    log_rank = log(rank)
+  ) %>% 
+  filter(rank > 10 & rank < 1000) # Filter for specific rank range
+
+# Perform linear regressions
+# Regression of frequency vs. rank
+model_freq_rank <- lm(frequency ~ rank, data = length_freq)
+summary(model_freq_rank)
+
+# Regression of frequency vs. log(rank)
+model_freq_logrank <- lm(frequency ~ log_rank, data = length_freq)
+summary(model_freq_logrank)
+
+# Regression of log(frequency) vs. log(rank) - most relevant for Zipf's law
+model_logfreq_logrank <- lm(log_frequency ~ log_rank, data = length_freq)
+summary(model_logfreq_logrank)
+
+# Plot the results
+# Frequency vs Rank
+ggplot(length_freq, aes(x = rank, y = frequency)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(
+    title = "Frequency vs Rank",
+    x = "Rank",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+# Frequency vs Log(Rank)
+ggplot(length_freq, aes(x = log_rank, y = frequency)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  labs(
+    title = "Frequency vs Log(Rank)",
+    x = "Log(Rank)",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+# Log(Frequency) vs Log(Rank)
+ggplot(length_freq, aes(x = log_rank, y = log_frequency)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "green") +
+  labs(
+    title = "Log(Frequency) vs Log(Rank)",
+    x = "Log(Rank)",
+    y = "Log(Frequency)"
+  ) +
+  theme_minimal()
+```
