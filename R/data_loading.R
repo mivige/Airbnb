@@ -72,3 +72,4 @@ validate_data <- function(data) {
 
 # Validate loaded data
 validate_data(airbnb_data)
+
