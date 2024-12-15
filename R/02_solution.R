@@ -3,14 +3,6 @@
 # Normal distribution
 # Author: Michele Gentile
 
-
-
-# Pregunta 2 (**1punto**)
-
-# Consideremos las variables `price` y `number_of_reviews` de Pollença y Palma del periodo "2024-09-13", del fichero `listing_common0_select.RData`. 
-# Estudiad si estos datos se aproximan a una distribución normal gráficamente. 
-# Para ello, dibujad el histograma , la función kernel que aproxima la densidad y la densidad de la normal de media y varianza las de las muestras de las variables `price` (para precios mayores de 50 y menores de 400) y `number_of_reviews` para Palma y Pollença.
-
 # Load necessary libraries
 library(tidyverse)
 library(ggplot2)
