@@ -1,50 +1,58 @@
 # 03_solution.R
 # Airbnb Mallorca Data Analysis
 # Comparison & hypothesis testing
-# Author: Angus Pelegrin
+# Author: Angus Pelegrin, Michele Gentile
 
-# Cargar librerías necesarias
+# Load necessary libraries
 library(tidyverse)
 library(dplyr)
 library(kableExtra)
 
 source("R/data_loading.R")
 
-# Paso 1: Guardar los datos de precios de palma y pollensa entre 50 y 400euros en dos objetos
-palma_prepared <- airbnb_data$listings %>% 
-  filter(neighbourhood_cleansed == "Palma de Mallorca" & price >= 50 & price <= 400) %>% 
+# Filter data: Prices between 50 and 400 for Palma and Pollença
+palma_prices <- airbnb_data$listings %>%
+  filter(neighbourhood_cleansed == "Palma de Mallorca", price >= 50, price <= 400) %>%
   pull(price)
 
-precio_medio_palma <- mean(palma_prepared)#precio medio de palma
-
-pollensa_prepared <- airbnb_data$listings %>%
-  filter(neighbourhood_cleansed == "Pollença" & price >= 50 & price <= 400) %>% 
+pollensa_prices <- airbnb_data$listings %>%
+  filter(neighbourhood_cleansed == "Pollença", price >= 50, price <= 400) %>%
   pull(price)
 
-precio_medio_pollensa <- mean(pollensa_prepared)#precio medio de pollensa
+# Calculate mean prices for reference
+mean_palma <- mean(palma_prices)
+mean_pollensa <- mean(pollensa_prices)
 
-# Paso 2: Comparar los datos
-diff_precio = precio_medio_palma - precio_medio_pollensa
+# Hypothesis Testing
+# H0: mean_pollença <= mean_palma
+# H1: mean_pollença > mean_palma
+t_test_result <- t.test(pollensa_prices, palma_prices, alternative = "greater")
 
-# Paso 3: Construid la hipótesis nula y alternativa,
-# calculad el p-valor y el intervalo de confiaza asociado al contraste
+# Extract relevant values
+p_value <- t_test_result$p.value
+conf_int <- t_test_result$conf.int
+diff_means <- mean_pollensa - mean_palma  # Difference of means
 
-# H0: No hay diferencia entre los precios medios de Palma y Pollensa
-# H1: Hay diferencia entre los precios medios de Palma y Pollensa
+# Conclusion: Reject H0 if p-value < 0.05
+conclusion <- ifelse(p_value < 0.05, 
+                     "Rechazamos la hipótesis nula: El precio medio en Pollença es mayor que en Palma.", 
+                     "No podemos rechazar la hipótesis nula: No hay evidencia suficiente de que el precio medio en Pollença sea mayor que en Palma.")
 
-p_value <- t.test(palma_prepared, pollensa_prepared, alternative = "two.sided")$p.value
-conf_int <- t.test(palma_prepared, pollensa_prepared, alternative = "two.sided")$conf.int
+# Present results
+results <- data.frame(
+  `Precio medio Palma` = mean_palma,
+  `Precio medio Pollença` = mean_pollensa,
+  `Diferencia de precios` = diff_means,
+  `P-valor` = p_value,
+  `Intervalo de confianza` = paste0("[", round(conf_int[1], 2), ", ", round(conf_int[2], 2), "]")
+)
 
-# Paso 4: Justifica tecnicamente la conclusión del contraste.
+# Display table
+kable(results, 
+      col.names = c("Precio medio Palma", "Precio medio Pollença", 
+                    "Diferencia de precios", "P-valor", "Intervalo de confianza"), 
+      align = "c", caption = "Resultados del contraste de hipótesis") %>%
+  kable_styling(full_width = FALSE)
 
-# Si el p-valor es menor que el nivel de significancia (0.05), rechazamos la hipótesis nula.
-# En este caso, el p-valor es menor que 0.05, por lo que rechazamos la hipótesis nula.
-# Por lo tanto, hay una diferencia significativa entre los precios medios de Palma y Pollensa.
-
-# Paso 5: Presentar los resultados de forma clara y concisa
-
-kable(data.frame(precio_medio_palma, precio_medio_pollensa, diff_precio, p_value, conf_int), 
-      col.names = c("Precio medio Palma", "Precio medio Pollensa", "Diferencia de precios", "P-valor", "Intervalo de confianza"), 
-      align = "c") %>%
-  kable_styling(full_width = F)
-
+# Print Conclusion
+print(conclusion)

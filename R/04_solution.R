@@ -1,40 +1,72 @@
 # 04_solution.R
 # Airbnb Mallorca Data Analysis
 # Interval comparison, hypothesis testing & boxplot
-# Author: Angus Pelegrin
+# Author: Angus Pelegrin, Michele Gentile
 
-# Cargar librerías necesarias
+# Load necessary libraries
 library(tidyverse)
 library(dplyr)
 library(kableExtra)
 
 source("R/data_loading.R")
 
-# Pregunta 1: Contrastar si las medias de los precios en Palma entre los periodos “2023-12-17” y “2024-03-23” son iguales.
-# Paso 1: Preparar los datos
+# Define comparison dates
+date1 <- "2023-12-17"
+date2 <- "2024-03-23"
 
-palma_prepared_1 <- airbnb_data$listings %>% #Guarda precios palma 2023-12-17
-  filter(neighbourhood_cleansed == "Palma de Mallorca" & date == "2023-12-17") %>% 
+# Filter data for Palma at the two dates
+palma_prices_2023 <- airbnb_data$listings %>%
+  filter(neighbourhood_cleansed == "Palma de Mallorca", date == date1) %>%
   pull(price)
 
-avg_palma_1 <- mean(palma_prepared_1) #precio medio de palma 2023-12-17
-
-palma_prepared_2 <- airbnb_data$listings %>% #Guarda precios palma 2024-06-30
-  filter(neighbourhood_cleansed == "Palma de Mallorca" & date == "2024-03-23") %>% 
+palma_prices_2024 <- airbnb_data$listings %>%
+  filter(neighbourhood_cleansed == "Palma de Mallorca", date == date2) %>%
   pull(price)
 
-avg_palma_2 <- mean(palma_prepared_2) #precio medio de palma 2024-06-30
+# Calculate means for reference
+mean_palma_2023 <- mean(palma_prices_2023, na.rm = TRUE)
+mean_palma_2024 <- mean(palma_prices_2024, na.rm = TRUE)
 
-# Paso 2: Comparar las medias
-diff_avg_palma <- avg_palma_1 - avg_palma_2
+# Hypothesis Testing
+# H0: mean_palma_2023 >= mean_palma_2024
+# H1: mean_palma_2023 < mean_palma_2024
+t_test_result <- t.test(palma_prices_2023, palma_prices_2024, alternative = "less")
 
-# Paso 3: Construir la hipótesis nula y alternativa, calcular el p-valor y el intervalo de confianza asociado al contraste
+# Extract p-value and confidence interval
+p_value <- t_test_result$p.value
+conf_int <- t_test_result$conf.int
 
-# H0: No hay diferencia entre los precios medios de Palma en los periodos “2023-12-17” y “2024-06-30”
-# H1: Hay diferencia entre los precios medios de Palma en los periodos “2023-12-17” y “2024-06-30”
+# Calculate mean difference
+mean_diff <- mean_palma_2023 - mean_palma_2024
 
-p_value_avg_palma <- t.test(palma_prepared_1, palma_prepared_2, alternative = "two.sided")$p.value
-conf_int_avg_palma <- t.test(palma_prepared_1, palma_prepared_2, alternative = "two.sided")$conf.int
+# Present Results
+results <- data.frame(
+  `Media 2023-12-17` = mean_palma_2023,
+  `Media 2024-03-23` = mean_palma_2024,
+  `Diferencia de medias` = mean_diff,
+  `P-valor` = p_value,
+  `Intervalo de confianza` = paste0("[", round(conf_int[1], 2), ", ", round(conf_int[2], 2), "]")
+)
 
-# Paso 4: Hacer un boxplot
-boxplot(palma_prepared_1, palma_prepared_2, names = c("2023-12-17", "2024-06-30"), col = c("blue", "red"), main = "Precios medios de Palma en 2023-12-17 y 2024-06-30", ylab = "Precio (€)", xlab = "Fecha")
+# Display results in a table
+kable(results, 
+      col.names = c("Media 2023-12-17", "Media 2024-03-23", "Diferencia de medias", "P-valor", "Intervalo de confianza"), 
+      align = "c", caption = "Resultados del contraste de hipótesis") %>%
+  kable_styling(full_width = FALSE)
+
+# Create a boxplot for visual comparison
+boxplot(
+  palma_prices_2023, palma_prices_2024, 
+  names = c("2023-12-17", "2024-03-23"),
+  col = c("skyblue", "salmon"),
+  main = "Comparación de precios en Palma",
+  ylab = "Precio (€)",
+  xlab = "Fecha"
+)
+
+# Print a conclusion
+if (p_value < 0.05) {
+  print("Rechazamos la hipótesis nula: Los precios medios en 2023-12-17 son significativamente menores que en 2024-03-23.")
+} else {
+  print("No podemos rechazar la hipótesis nula: No hay evidencia suficiente de que los precios medios en 2023-12-17 sean menores que en 2024-03-23.")
+}

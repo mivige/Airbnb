@@ -1,25 +1,31 @@
-# Cargar librerías necesarias
+# 01_solution.R
+# Airbnb Mallorca Data Analysis
+# Descriptive stats
+# Author: Finn Dicke
+
+# Load necessary libraries
 library(dplyr)
 library(kableExtra)
 
-# Paso 1: Preparar los datos
-# Convertir las fechas a formato 'Year' y agrupar por municipio y año
-data_prepared <- listings_common0_select %>%
-  mutate(year = format(date, "%Y")) %>%  # Extraer el año de la columna 'date'
-  group_by(neighbourhood_cleansed, year)  # Agrupar por municipio y año
+source("R/data_loading.R")
 
-# Paso 2: Calcular estadísticos descriptivos
+data_prepared <- airbnb_data$listings %>%
+  mutate(year = format(date, "%Y")) %>%  # Convert dates in 'Year' format
+  group_by(neighbourhood_cleansed, year)  # Group by neighbourhood and year
+
+# Calculate descriptive stats
 stats <- data_prepared %>%
   summarise(
-    mean_price = mean(price, na.rm = TRUE),       # Media del precio
-    median_price = median(price, na.rm = TRUE),  # Mediana del precio
-    sd_price = sd(price, na.rm = TRUE),          # Desviación estándar del precio
-    mean_reviews = mean(number_of_reviews, na.rm = TRUE),       # Media de reseñas
-    median_reviews = median(number_of_reviews, na.rm = TRUE),  # Mediana de reseñas
-    sd_reviews = sd(number_of_reviews, na.rm = TRUE)           # Desviación estándar de reseñas
+    mean_price = mean(price, na.rm = TRUE),      
+    median_price = median(price, na.rm = TRUE),  
+    sd_price = sd(price, na.rm = TRUE),   # Standard dev 
+    mean_reviews = mean(number_of_reviews, na.rm = TRUE),
+    median_reviews = median(number_of_reviews, na.rm = TRUE),
+    sd_reviews = sd(number_of_reviews, na.rm = TRUE) 
   ) %>%
   ungroup()
 
+# Present datas in a table format
 stats %>%
   kable("html", caption = "Estadísticos descriptivos por municipio y año") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)

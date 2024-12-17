@@ -1,42 +1,54 @@
-# Filtrar los datos para el periodo "2024-03-23" y los municipios deseados
-rating_Pollenca= listings_common0_select %>%
-  filter(neighbourhood_cleansed=="Pollença" & date=="2024-03-23")
-rating_Pollenca=na.omit(rating_Pollenca$review_scores_rating)
+# 05_solution.R
+# Airbnb Mallorca Data Analysis
+# Normal distribution
+# Author: Finn Dicke, Michele Gentile
 
-rating_Palma= listings_common0_select %>%
-  filter(neighbourhood_cleansed=="Palma de Mallorca" & date=="2024-03-23")
-rating_Palma=na.omit(rating_Palma$review_scores_rating)
+# Load necessary libraries
+library(tidyverse)
+library(kableExtra)
 
-# Calcular la proporción de apartamentos con 'review_scores_rating' > 4 por municipio
+source("R/data_loading.R")
 
-#Pollenca
-p_Pollenca=mean(rating_Pollenca>4)
-n_Pollenca=length(rating_Pollenca)
-p_Pollenca
-n_Pollenca
+# Filter data for Palma and Pollença on 2024-03-23
+rating_Pollença <- airbnb_data$listings %>%
+  filter(neighbourhood_cleansed == "Pollença", date == "2024-03-23") %>%
+  pull(review_scores_rating) %>%
+  na.omit()
 
-#Mallorca
-p_Mallorca=mean(rating_Palma>4)
-n_Mallorca=length(rating_Palma)
-p_Mallorca
-n_Mallorca
+rating_Palma <- airbnb_data$listings %>%
+  filter(neighbourhood_cleansed == "Palma de Mallorca", date == "2024-03-23") %>%
+  pull(review_scores_rating) %>%
+  na.omit()
 
-# Calcular la diferencia de proporciones
-diferencia <- p_Pollenca - p_Mallorca
+# Calculate proportions and sample sizes
+p_Pollença <- mean(rating_Pollença > 4)
+n_Pollença <- length(rating_Pollença)
 
-# Calcular el error estándar
-error <- sqrt((p_Pollenca * (1 - p_Pollenca) / n_Pollenca) + (p_Mallorca * (1 - p_Mallorca) / n_Mallorca))
+p_Palma <- mean(rating_Palma > 4)
+n_Palma <- length(rating_Palma)
 
-# Valor crítico para un intervalo de confianza del 95%
+# Calculate difference in proportions
+diferencia <- p_Pollença - p_Palma
+
+# Calculate standard error
+error <- sqrt((p_Pollença * (1 - p_Pollença) / n_Pollença) + 
+                (p_Palma * (1 - p_Palma) / n_Palma))
+
+# Critical value for a 95% confidence interval
 z <- qnorm(0.975)
 
-# Intervalo de confianza
+# Confidence interval for the difference in proportions
 intervalo <- c(diferencia - z * error, diferencia + z * error)
 
-# Resultados finales
-list(
-  Diferencia = diferencia,
-  IC_95 = intervalo,
-  Palma_Proporción = p_Mallorca,
-  Pollença_Proporción = p_Pollenca
+# Present results
+results <- data.frame(
+  "Proporción Palma" = p_Palma,
+  "Proporción Pollença" = p_Pollença,
+  "Diferencia de Proporciones" = diferencia,
+  "IC 95% Inferior" = intervalo[1],
+  "IC 95% Superior" = intervalo[2]
 )
+
+# Display results as a table
+kable(results, caption = "Intervalo de confianza para la diferencia de proporciones") %>%
+  kable_styling(full_width = FALSE)
