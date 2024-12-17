@@ -1,6 +1,6 @@
 # 07_solution.R
 # Airbnb Mallorca Data Analysis
-# Zipf's law
+# Zipf's Law analysis on review comments
 # Author: Michele Gentile
 
 # Load required libraries

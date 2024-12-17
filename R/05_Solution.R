@@ -1,6 +1,6 @@
 # 05_solution.R
 # Airbnb Mallorca Data Analysis
-# Normal distribution
+# Proportion of high-rated apartments
 # Author: Finn Dicke, Michele Gentile
 
 # Load necessary libraries

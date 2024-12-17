@@ -1,6 +1,6 @@
 # 01_solution.R
 # Airbnb Mallorca Data Analysis
-# Descriptive stats
+# Descriptive statistics by municipality and period
 # Author: Finn Dicke
 
 # Load necessary libraries

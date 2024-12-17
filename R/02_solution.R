@@ -1,6 +1,6 @@
 # 02_solution.R
 # Airbnb Mallorca Data Analysis
-# Normal distribution
+# Normality assessment of prices and reviews
 # Author: Michele Gentile
 
 # Load necessary libraries

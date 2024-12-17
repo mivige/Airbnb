@@ -1,6 +1,6 @@
 # 04_solution.R
 # Airbnb Mallorca Data Analysis
-# Interval comparison, hypothesis testing & boxplot
+# Temporal price variations
 # Author: Angus Pelegrin, Michele Gentile
 
 # Load necessary libraries

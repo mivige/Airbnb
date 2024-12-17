@@ -1,6 +1,6 @@
 # 06_solution.R
 # Airbnb Mallorca Data Analysis
-# Normal distribution
+# Comparative proportion analysis
 # Author: Finn Dicke, Michele Gentile
 
 # Load necessary libraries

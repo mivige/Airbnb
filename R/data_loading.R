@@ -1,6 +1,7 @@
 # data_loading.R
 # Airbnb Mallorca Data Analysis
 # Data Loading and Preprocessing Script
+# Author: Michele Gentile
 
 # Load required libraries
 library(tidyverse)

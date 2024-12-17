@@ -1,6 +1,6 @@
 # 03_solution.R
 # Airbnb Mallorca Data Analysis
-# Comparison & hypothesis testing
+# Price comparisons between municipalities
 # Author: Angus Pelegrin, Michele Gentile
 
 # Load necessary libraries
