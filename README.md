@@ -1,7 +1,7 @@
 # 🏖️ Mallorca Airbnb Data Analysis  
 
-**📊 Built for:** *Statistics – University of the Balearic Islands (UIB)*  
-**📆 Year:** 2024/25 
+**📊 Built for:** *Math III - Statistics (Matemàtiques III -Estadística) – University of the Balearic Islands (UIB)*  
+**📆 Year:** 2024/25  
 **🧑‍💻 Team Members:** Michele Vincenzo Gentile, Finn Dicke & Angus Pelegrin 
 
 ---
